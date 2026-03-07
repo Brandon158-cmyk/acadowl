@@ -15,7 +15,7 @@ export default function PlatformSchoolsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title="Schools" description="Manage all schools on the EduZambia platform.">
-        <Link href="/schools/new" className={buttonVariants({ variant: 'default' })}>
+        <Link href="/platform/schools/new" className={buttonVariants({ variant: 'default' })}>
           <Plus className="mr-2 h-4 w-4" />
           Add School
         </Link>
@@ -36,7 +36,7 @@ export default function PlatformSchoolsPage() {
           <p className="text-muted-foreground mt-2 mb-6">
             Create your first school to get started.
           </p>
-          <Link href="/schools/new" className={buttonVariants({ variant: 'default' })}>
+          <Link href="/platform/schools/new" className={buttonVariants({ variant: 'default' })}>
             <Plus className="mr-2 h-4 w-4" />
             Add School
           </Link>

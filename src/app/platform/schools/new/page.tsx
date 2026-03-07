@@ -95,7 +95,7 @@ export default function CreateSchoolPage() {
       });
 
       toast.success('School created successfully');
-      router.push('/schools'); // Or to user creation for this school
+      router.push('/platform/schools'); // Or to user creation for this school
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to create school');
     }
