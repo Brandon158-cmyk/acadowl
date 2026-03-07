@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as PasswordReset from "../PasswordReset.js";
 import type * as _lib_errors from "../_lib/errors.js";
 import type * as _lib_featureGuard from "../_lib/featureGuard.js";
 import type * as _lib_permissions from "../_lib/permissions.js";
@@ -31,6 +32,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  PasswordReset: typeof PasswordReset;
   "_lib/errors": typeof _lib_errors;
   "_lib/featureGuard": typeof _lib_featureGuard;
   "_lib/permissions": typeof _lib_permissions;

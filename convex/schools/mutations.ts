@@ -31,9 +31,14 @@ export const createSchool = mutation({
     zraTpin: v.string(),
     subscriptionTier: v.union(v.literal('starter'), v.literal('standard'), v.literal('premium')),
     enabledFeatures: v.array(v.string()),
+    // Optional first admin bootstrap
+    adminName: v.optional(v.string()),
+    adminEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await requirePlatformAdmin(ctx);
+
+    const { adminName, adminEmail, ...schoolData } = args;
 
     // Check slug uniqueness
     const existing = await ctx.db
@@ -47,8 +52,8 @@ export const createSchool = mutation({
 
     const now = Date.now();
 
-    return ctx.db.insert('schools', {
-      ...args,
+    const schoolId = await ctx.db.insert('schools', {
+      ...schoolData,
       gradingMode: args.type === 'college' || args.type === 'technical' ? 'gpa' : 'ecz',
       academicMode: args.type === 'college' || args.type === 'technical' ? 'semester' : 'term',
       branding: {
@@ -64,6 +69,22 @@ export const createSchool = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    // Bootstrap first admin if provided
+    if (adminName && adminEmail) {
+      await ctx.db.insert('users', {
+        schoolId,
+        name: adminName,
+        email: adminEmail.toLowerCase(),
+        role: 'school_admin',
+        isActive: true,
+        isFirstLogin: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    return schoolId;
   },
 });
 

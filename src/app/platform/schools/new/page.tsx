@@ -48,6 +48,8 @@ const formSchema = z.object({
   phone: z.string().min(8, 'Valid phone number required'),
   zraTpin: z.string().min(10, 'ZRA TPIN requires at least 10 digits'),
   subscriptionTier: z.enum(['starter', 'standard', 'premium']),
+  adminName: z.string().min(2, 'Administrator name is required'),
+  adminEmail: z.string().email('Valid administrator email required'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,6 +64,8 @@ export default function CreateSchoolPage() {
       type: 'day_secondary',
       subscriptionTier: 'starter',
       slug: '',
+      adminName: '',
+      adminEmail: '',
     },
   });
 
@@ -246,6 +250,47 @@ export default function CreateSchoolPage() {
                     {errors.zraTpin.message}
                   </p>
                 )}
+              </div>
+            </div>
+
+            <div className="space-y-6 pt-6">
+              <div className="flex items-center gap-2">
+                <div className="bg-border h-px flex-1" />
+                <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+                  Administrator Details
+                </h4>
+                <div className="bg-border h-px flex-1" />
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Set up the initial administrator account for this school. They will receive an email
+                to complete their setup.
+              </p>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="adminName">Full Name</Label>
+                  <Input id="adminName" placeholder="e.g. John Doe" {...register('adminName')} />
+                  {errors.adminName && (
+                    <p className="text-destructive text-[0.8rem] font-medium">
+                      {errors.adminName.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="adminEmail">Email Address</Label>
+                  <Input
+                    id="adminEmail"
+                    type="email"
+                    placeholder="admin@school.com"
+                    {...register('adminEmail')}
+                  />
+                  {errors.adminEmail && (
+                    <p className="text-destructive text-[0.8rem] font-medium">
+                      {errors.adminEmail.message}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
