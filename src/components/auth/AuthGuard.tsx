@@ -1,13 +1,15 @@
 'use client';
 
 import { useConvexAuth } from 'convex/react';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 /**
  * ISSUE-014 · AuthGuard Component
  *
  * Client component that protects routes by checking auth status.
  * Shows a loading skeleton while auth resolves to prevent flash of protected content.
+ * Redirects to /login if the user is unauthenticated.
  *
  * @example
  * <AuthGuard>
@@ -21,8 +23,15 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, loadingFallback }: AuthGuardProps) {
   const { isLoading, isAuthenticated } = useConvexAuth();
+  const router = useRouter();
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading || !isAuthenticated) {
     return (
       <>
         {loadingFallback ?? (
@@ -32,11 +41,6 @@ export function AuthGuard({ children, loadingFallback }: AuthGuardProps) {
         )}
       </>
     );
-  }
-
-  if (!isAuthenticated) {
-    // Will be redirected by middleware — show nothing
-    return null;
   }
 
   return <>{children}</>;
