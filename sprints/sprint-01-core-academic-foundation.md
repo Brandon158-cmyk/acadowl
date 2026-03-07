@@ -1,4 +1,5 @@
 # EduZambia — Sprint 01: Core Academic Foundation
+
 ## Development Guide & Issue Tracker
 
 > **Sprint Goal:** Build the complete academic operating core of EduZambia. By the end of this sprint, a school can enrol students into class sections, teachers can take attendance offline and have SMS alerts fire automatically, marks can be entered and locked, and report cards can be generated as branded PDFs. Every data structure built here is the backbone that Fees (Sprint 02), Guardian Portal (Sprint 03), Boarding (Sprint 04), LMS (Sprint 05), and Transport (Sprint 06) will connect into without modification.
@@ -31,30 +32,30 @@
 
 ## Sprint Overview
 
-| Field | Value |
-|---|---|
-| **Sprint Name** | Sprint 01 — Core Academic Foundation |
-| **Duration** | 5 weeks |
-| **Team Size** | 3–4 developers |
-| **Total Issues** | 44 |
+| Field            | Value                                            |
+| ---------------- | ------------------------------------------------ |
+| **Sprint Name**  | Sprint 01 — Core Academic Foundation             |
+| **Duration**     | 5 weeks                                          |
+| **Team Size**    | 3–4 developers                                   |
+| **Total Issues** | 44                                               |
 | **Prerequisite** | Sprint 00 complete and all handoff checks passed |
 
 ### Sprint Epics at a Glance
 
-| # | Epic | Issues | Est. Days |
-|---|---|---|---|
-| 1 | Academic Year & Term Management | 3 | 2 |
-| 2 | Subject & Curriculum Management | 4 | 3 |
-| 3 | Student Enrolment & Profile Management | 6 | 6 |
-| 4 | Class Sections & Student Placement | 4 | 3 |
-| 5 | Staff & Subject Assignment | 3 | 2 |
-| 6 | Timetable Builder | 4 | 4 |
-| 7 | Attendance System (Offline-First) | 6 | 6 |
-| 8 | SMS & Notification Integration | 4 | 4 |
-| 9 | Exams & Mark Entry | 5 | 5 |
-| 10 | Grading Engine | 3 | 3 |
-| 11 | Report Card Generation | 4 | 4 |
-| 12 | Student & Academic Analytics | 3 | 2 |
+| #   | Epic                                   | Issues | Est. Days |
+| --- | -------------------------------------- | ------ | --------- |
+| 1   | Academic Year & Term Management        | 3      | 2         |
+| 2   | Subject & Curriculum Management        | 4      | 3         |
+| 3   | Student Enrolment & Profile Management | 6      | 6         |
+| 4   | Class Sections & Student Placement     | 4      | 3         |
+| 5   | Staff & Subject Assignment             | 3      | 2         |
+| 6   | Timetable Builder                      | 4      | 4         |
+| 7   | Attendance System (Offline-First)      | 6      | 6         |
+| 8   | SMS & Notification Integration         | 4      | 4         |
+| 9   | Exams & Mark Entry                     | 5      | 5         |
+| 10  | Grading Engine                         | 3      | 3         |
+| 11  | Report Card Generation                 | 4      | 4         |
+| 12  | Student & Academic Analytics           | 3      | 2         |
 
 ---
 
@@ -62,17 +63,17 @@
 
 The following items from Sprint 00 are **directly depended on** in this sprint. Verify they are working before beginning any issue here.
 
-| Sprint 00 Deliverable | Used By |
-|---|---|
-| `convex/schema.ts` — `students`, `staff`, `sections`, `grades`, `terms`, `academicYears`, `attendance`, `examSessions`, `examResults`, `subjects`, `timetableSlots`, `notifications` tables | Every epic in this sprint |
-| `withSchoolScope()` utility | Every Convex function written this sprint |
-| `requireRole()` and `requirePermission()` utilities | Every mutation |
-| `Feature` enum and `useFeature()` hook | Timetable, Period Attendance, LMS connections |
-| `getDefaultFeaturesForSchoolType()` presets | Academic mode (term vs semester) detection |
-| `AdminSidebar` with feature-gated nav config | All new admin pages are added to nav config this sprint |
-| School `gradingMode` field (`ecz` / `gpa` / `percentage`) | Entire Grading Engine |
-| School `academicMode` field (`term` / `semester`) | Academic Year & Term Management |
-| Seed script (3 test schools) | All testing — especially the college (GPA/semester) school |
+| Sprint 00 Deliverable                                                                                                                                                                       | Used By                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `convex/schema.ts` — `students`, `staff`, `sections`, `grades`, `terms`, `academicYears`, `attendance`, `examSessions`, `examResults`, `subjects`, `timetableSlots`, `notifications` tables | Every epic in this sprint                                  |
+| `withSchoolScope()` utility                                                                                                                                                                 | Every Convex function written this sprint                  |
+| `requireRole()` and `requirePermission()` utilities                                                                                                                                         | Every mutation                                             |
+| `Feature` enum and `useFeature()` hook                                                                                                                                                      | Timetable, Period Attendance, LMS connections              |
+| `getDefaultFeaturesForSchoolType()` presets                                                                                                                                                 | Academic mode (term vs semester) detection                 |
+| `AdminSidebar` with feature-gated nav config                                                                                                                                                | All new admin pages are added to nav config this sprint    |
+| School `gradingMode` field (`ecz` / `gpa` / `percentage`)                                                                                                                                   | Entire Grading Engine                                      |
+| School `academicMode` field (`term` / `semester`)                                                                                                                                           | Academic Year & Term Management                            |
+| Seed script (3 test schools)                                                                                                                                                                | All testing — especially the college (GPA/semester) school |
 
 ---
 
@@ -80,18 +81,18 @@ The following items from Sprint 00 are **directly depended on** in this sprint. 
 
 These are architectural decisions made in Sprint 01 that ensure future sprints connect without rework:
 
-| Decision | Why It Matters for Future Sprints |
-|---|---|
-| **Student `currentSectionId` + `currentGradeId` are always current** — updated immediately on transfer or promotion | Sprint 02 (fees) reads these to determine which fee structure to apply. Sprint 04 (boarding) reads grade to assign hostel block. |
-| **`attendance` table stores both `sectionId` AND `studentId`** | Sprint 04 night prep attendance uses the same table with `period: 'night_prep'`. Sprint 05 LMS engagement reads attendance correlation. |
-| **`examResults` table links to `subjectId` + `sectionId` + `examSessionId`** | Sprint 05 LMS grades auto-write into this table. Sprint 07 analytics aggregate across all three dimensions. |
-| **Timetable slots link `staffId` + `subjectId` + `sectionId`** | Sprint 05 LMS courses are created FROM timetable assignments — teacher sees "Create Course" next to each timetable slot. |
-| **Homework uses the `lmsLessons` table** (type: `'assignment'`) even before full LMS is built | Sprint 05 LMS simply upgrades the same records with course structure around them — no data migration needed. |
-| **Student number format is configurable per school** (`{PREFIX}-{YEAR}-{SEQUENCE}`) | Sprint 02 invoices use the student number as the invoice prefix. |
-| **`notifications` table records every SMS sent** | Sprint 02 fee reminders, Sprint 03 parent portal, Sprint 04 sick bay alerts — all use the same notification dispatch system. |
-| **Grading schema supports both ECZ and GPA** from day one | Sprint 05 LMS submissions feed into `examResults` using whichever mode is active. Sprint 07 analytics report correctly across both. |
-| **Academic year is closed explicitly** (not inferred from dates) | Sprint 02 invoices are term-scoped. Sprint 04 bed assignments are term-scoped. Both need a reliable "current term" signal. |
-| **`subjects` have `eczSubjectCode`** | Sprint 07 MoE statistical returns require these codes. Setting them up now avoids a migration to add them later. |
+| Decision                                                                                                            | Why It Matters for Future Sprints                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Student `currentSectionId` + `currentGradeId` are always current** — updated immediately on transfer or promotion | Sprint 02 (fees) reads these to determine which fee structure to apply. Sprint 04 (boarding) reads grade to assign hostel block.        |
+| **`attendance` table stores both `sectionId` AND `studentId`**                                                      | Sprint 04 night prep attendance uses the same table with `period: 'night_prep'`. Sprint 05 LMS engagement reads attendance correlation. |
+| **`examResults` table links to `subjectId` + `sectionId` + `examSessionId`**                                        | Sprint 05 LMS grades auto-write into this table. Sprint 07 analytics aggregate across all three dimensions.                             |
+| **Timetable slots link `staffId` + `subjectId` + `sectionId`**                                                      | Sprint 05 LMS courses are created FROM timetable assignments — teacher sees "Create Course" next to each timetable slot.                |
+| **Homework uses the `lmsLessons` table** (type: `'assignment'`) even before full LMS is built                       | Sprint 05 LMS simply upgrades the same records with course structure around them — no data migration needed.                            |
+| **Student number format is configurable per school** (`{PREFIX}-{YEAR}-{SEQUENCE}`)                                 | Sprint 02 invoices use the student number as the invoice prefix.                                                                        |
+| **`notifications` table records every SMS sent**                                                                    | Sprint 02 fee reminders, Sprint 03 parent portal, Sprint 04 sick bay alerts — all use the same notification dispatch system.            |
+| **Grading schema supports both ECZ and GPA** from day one                                                           | Sprint 05 LMS submissions feed into `examResults` using whichever mode is active. Sprint 07 analytics report correctly across both.     |
+| **Academic year is closed explicitly** (not inferred from dates)                                                    | Sprint 02 invoices are term-scoped. Sprint 04 bed assignments are term-scoped. Both need a reliable "current term" signal.              |
+| **`subjects` have `eczSubjectCode`**                                                                                | Sprint 07 MoE statistical returns require these codes. Setting them up now avoids a migration to add them later.                        |
 
 ---
 
@@ -106,14 +107,17 @@ These are architectural decisions made in Sprint 01 that ensure future sprints c
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Build the backend and UI for managing academic years. A school must have an active academic year before any students can be enrolled, any attendance can be marked, or any exams can be created.
 
 #### User Story
+
 > As a school admin, I create the "2025 Academic Year", set its date range, and activate it. The system flags it as the current year across all modules. At year-end, I will "close" this year and create the 2026 year.
 
 #### Acceptance Criteria
 
 **Backend — `convex/schools/academicYears.ts`:**
+
 - [ ] `createAcademicYear` mutation:
   - Args: `{ year: number, label: string, startDate: string, endDate: string }`
   - Validates no duplicate year exists for the school
@@ -132,6 +136,7 @@ Build the backend and UI for managing academic years. A school must have an acti
 - [ ] `getCurrentAcademicYear` query: returns the single active year (or null)
 
 **Frontend — `/(admin)/settings/academic-year/page.tsx`:**
+
 - [ ] List of all academic years with status badges (Active, Closed, Draft)
 - [ ] "Create Academic Year" button → inline form or modal
 - [ ] Activate / Close buttons with confirmation dialogs
@@ -139,6 +144,7 @@ Build the backend and UI for managing academic years. A school must have an acti
 - [ ] Warning if no academic year is active: persistent yellow banner in admin dashboard
 
 #### Data Note for Future Sprints
+
 > The `currentAcademicYearId` on the `schools` document is the source of truth used by Sprint 02 (term-scoped invoice generation), Sprint 04 (term-scoped bed assignment), and Sprint 05 (LMS course academic year).
 
 ---
@@ -148,14 +154,17 @@ Build the backend and UI for managing academic years. A school must have an acti
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Terms are the operational unit of the school year. Every invoice, attendance report, and exam result is scoped to a term. The active term must be explicitly set — it never auto-advances.
 
 #### User Story
+
 > As a school admin, I create three terms within the 2025 academic year, each with start/end dates and exam period dates. I activate Term 1. When Term 1 ends, I manually activate Term 2.
 
 #### Acceptance Criteria
 
 **Backend — `convex/schools/terms.ts`:**
+
 - [ ] `createTerms` mutation: bulk creates terms for an academic year
   - Validates no overlapping date ranges within the same academic year
   - For `academicMode: 'semester'` schools: validates exactly 2 terms created
@@ -169,6 +178,7 @@ Terms are the operational unit of the school year. Every invoice, attendance rep
 - [ ] `getCurrentTerm` query: returns active term with days remaining calculated
 
 **Frontend:**
+
 - [ ] Terms shown as a timeline inside the Academic Year settings page
 - [ ] Activate Term button with modal: "Activating Term 2 will close Term 1. Outstanding exam marks will be locked. Confirm?"
 - [ ] Term status chips: Active (green), Upcoming (gray), Closed (faded), Exam Period (amber)
@@ -181,14 +191,17 @@ Terms are the operational unit of the school year. Every invoice, attendance rep
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 A school calendar that tracks holidays, events, and closures. This feeds into the attendance system (public holidays are auto-marked as no-school days) and the parent portal (parents see upcoming events).
 
 #### User Story
+
 > As a school admin, I add "Independence Day — 24 Oct 2025" as a public holiday. The attendance system will not flag students as absent on this day. Parents see this on their calendar.
 
 #### Acceptance Criteria
 
 **Schema addition to `convex/schema.ts`:**
+
 ```typescript
 schoolEvents: defineTable({
   schoolId: v.id('schools'),
@@ -199,17 +212,19 @@ schoolEvents: defineTable({
   startDate: v.string(),
   endDate: v.string(),
   type: v.union(
-    v.literal('holiday'),          // No attendance expected
-    v.literal('exam_period'),      // Exam days — special attendance rules
-    v.literal('sports_day'),       // School event — attendance expected
-    v.literal('school_closure'),   // Unexpected closure
-    v.literal('parent_teacher'),   // PTM day
-    v.literal('general')
+    v.literal('holiday'), // No attendance expected
+    v.literal('exam_period'), // Exam days — special attendance rules
+    v.literal('sports_day'), // School event — attendance expected
+    v.literal('school_closure'), // Unexpected closure
+    v.literal('parent_teacher'), // PTM day
+    v.literal('general'),
   ),
-  affectsAttendance: v.boolean(),  // If true, attendance NOT required on these dates
+  affectsAttendance: v.boolean(), // If true, attendance NOT required on these dates
   visibleToParents: v.boolean(),
   createdAt: v.number(),
-}).index('by_school', ['schoolId']).index('by_academic_year', ['schoolId', 'academicYearId'])
+})
+  .index('by_school', ['schoolId'])
+  .index('by_academic_year', ['schoolId', 'academicYearId']);
 ```
 
 - [ ] `createSchoolEvent`, `updateSchoolEvent`, `deleteSchoolEvent` mutations
@@ -232,14 +247,17 @@ schoolEvents: defineTable({
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Build the subject management system. Subjects are school-level (each school defines their own list) but are seeded with Zambia's MoE curriculum. This is the foundation for timetable building, exam sessions, and Sprint 05's LMS courses.
 
 #### User Story
+
 > As a school admin, I open the Subjects page and see all MoE subjects pre-populated for my school type. I can add custom subjects (e.g., "Additional Mathematics"), mark which are compulsory vs elective, and assign them to grade levels.
 
 #### Acceptance Criteria
 
 **Backend — `convex/academics/subjects.ts`:**
+
 - [ ] `createSubject` mutation:
   - Args: `{ name, code, gradeIds, isCompulsory, eczSubjectCode?, isStemSubject?, theoryWeight?, practicalWeight? }`
   - Code must be unique within the school (e.g., "MATH", "ENG", "BIO")
@@ -255,12 +273,14 @@ Build the subject management system. Subjects are school-level (each school defi
 - [ ] `getSubjectsBySchool` query: all subjects with their grade assignments
 
 **Frontend — `/(admin)/academics/subjects/page.tsx`:**
+
 - [ ] Subject list grouped by grade level
 - [ ] "Import MoE Defaults" button (triggers `seedDefaultSubjects`)
 - [ ] Add/Edit subject form: Name, Short Code, Grade assignment (multi-select), Compulsory toggle, ECZ Subject Code, Theory/Practical split (for technical schools)
 - [ ] Subject detail page shows: which sections teach it, which teachers are assigned, recent exam performance average
 
 #### Forward-Compatibility Note
+
 > The `subjectId` is the primary foreign key used in: `timetableSlots`, `examResults`, `lmsLessons`, `libraryBooks` (subject tag), and `staffSubjectAssignments`. It must never be changed or soft-deleted without cascading impact checks.
 
 ---
@@ -270,11 +290,13 @@ Build the subject management system. Subjects are school-level (each school defi
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Configure the grade levels for the school — Grade 1 through 7 for primary, 8–12 for secondary, Form 1–6 for some secondary, Year 1–4 for colleges. Grades determine which fee structure applies, which subjects are offered, and which exam format is used.
 
 #### Acceptance Criteria
 
 **Backend — `convex/academics/grades.ts`:**
+
 - [ ] `seedDefaultGrades` mutation: creates grades based on school type
   - `day_primary` / `boarding_primary`: Grades 1–7, flags Grade 7 as `graduationGrade: true`
   - `day_secondary` / `boarding_secondary` / `mixed_secondary`: Grades 8–12, flags Grade 9 and Grade 12 as `graduationGrade: true` (ECZ exam years)
@@ -286,6 +308,7 @@ Configure the grade levels for the school — Grade 1 through 7 for primary, 8�
 - [ ] ECZ flag on grades: `isEczExamYear: boolean` — when `true`, exam results are formatted for ECZ submission and mock tracking is enabled
 
 **Frontend:**
+
 - [ ] Grades page at `/(admin)/academics/grades` — ordered list with drag-to-reorder
 - [ ] "Seed Grades" button for new schools (runs once, disabled after first grade created)
 - [ ] Graduation Grade badge shown on ECZ exam years
@@ -298,14 +321,17 @@ Configure the grade levels for the school — Grade 1 through 7 for primary, 8�
 **Type:** Backend + Frontend | **Priority:** P2 | **Estimate:** 1.5 days
 
 #### Description
+
 Teachers can create lesson plans linked to MoE syllabus topics and share them within the school. This is a standalone feature in Sprint 01 that becomes the content foundation for the Sprint 05 LMS.
 
 #### User Story
+
 > As a Grade 10 Biology teacher, I create a lesson plan for "Cell Division — Mitosis". I link it to the MoE syllabus topic, add learning objectives, resources, and duration. Other Biology teachers can see and use my plan. When LMS is enabled, this plan becomes a lesson in the Biology course.
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 lessonPlans: defineTable({
   schoolId: v.id('schools'),
@@ -313,20 +339,26 @@ lessonPlans: defineTable({
   subjectId: v.id('subjects'),
   gradeId: v.id('grades'),
   title: v.string(),
-  syllabusTopicRef: v.optional(v.string()),  // MoE topic reference code
+  syllabusTopicRef: v.optional(v.string()), // MoE topic reference code
   learningObjectives: v.array(v.string()),
-  duration: v.number(),                       // Minutes
-  resources: v.array(v.object({
-    type: v.union(v.literal('pdf'), v.literal('link'), v.literal('text')),
-    title: v.string(),
-    url: v.optional(v.string()),
-    content: v.optional(v.string()),
-  })),
+  duration: v.number(), // Minutes
+  resources: v.array(
+    v.object({
+      type: v.union(v.literal('pdf'), v.literal('link'), v.literal('text')),
+      title: v.string(),
+      url: v.optional(v.string()),
+      content: v.optional(v.string()),
+    }),
+  ),
   visibility: v.union(v.literal('private'), v.literal('school')),
   // Sprint 05: lmsLessonId added when converted to LMS lesson
   lmsLessonId: v.optional(v.id('lmsLessons')),
-  createdAt: v.number(), updatedAt: v.number(),
-}).index('by_school', ['schoolId']).index('by_staff', ['staffId']).index('by_subject_grade', ['subjectId', 'gradeId'])
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index('by_school', ['schoolId'])
+  .index('by_staff', ['staffId'])
+  .index('by_subject_grade', ['subjectId', 'gradeId']);
 ```
 
 - [ ] Teacher can create, edit, view, delete their own lesson plans
@@ -342,19 +374,23 @@ lessonPlans: defineTable({
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 Teachers set homework for their sections. Students and parents can see it. Students can submit text or file responses. This uses the `lmsLessons` table (with `contentType: 'assignment'`) directly — so when Sprint 05 LMS is built, homework is already inside the LMS data model and just needs course structure around it.
 
 #### User Story
+
 > As a teacher, I set a homework assignment for Grade 8A Maths: "Exercises 1.3 Q1–10, due Friday." Parents see it in the parent portal. Students can upload a photo of their work. I mark it.
 
 #### Acceptance Criteria
 
 **Uses `lmsLessons` table** (already in schema from Sprint 00) with:
+
 - `contentType: 'assignment'`
 - `moduleId` set to a auto-created "Homework" module per section per term (created on first homework assignment)
 - `courseId` pointing to a auto-created "Homework Feed" course per section per term
 
 **`convex/academics/homework.ts`:**
+
 - [ ] `createHomework` mutation:
   - Requires `requirePermission(ctx, Permission.CREATE_COURSE)` (shared with LMS)
   - Auto-creates the backing `lmsCourses` and `lmsModules` records if they don't exist
@@ -367,12 +403,14 @@ Teachers set homework for their sections. Students and parents can see it. Stude
 - [ ] `getPendingSubmissions` query: teacher sees which students haven't submitted
 
 **Frontend — `/(teacher)/homework/page.tsx`:**
+
 - [ ] Homework list per section with status: Set / Submission Open / Marking / Closed
 - [ ] Create Homework form: Title, Description, Due Date, Max Marks (optional), Sections (multi-select)
 - [ ] Submission tracker: table of students × submitted? × score
 - [ ] Grade submissions: view each submission, enter score and feedback
 
 **Parent Portal Hook (Sprint 03 will build the UI):**
+
 > `getHomeworkForStudent` query already exists. Sprint 03 parent portal simply calls it.
 
 ---
@@ -388,14 +426,17 @@ Teachers set homework for their sections. Students and parents can see it. Stude
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 1.5 days
 
 #### Description
+
 The primary way students enter the system. A multi-step form that captures all required fields, validates uniqueness, and sets up the student's initial placement in a section.
 
 #### User Story
+
 > As a school admin or class teacher, I enrol a new student. I fill in their personal details, upload a photo, select their class section, enter their guardian's details, and the system creates both the student record and guardian account, sending an SMS welcome to the guardian.
 
 #### Acceptance Criteria
 
 **Backend — `convex/students/mutations.ts`:**
+
 - [ ] `enrolStudent` mutation:
   - Validates `studentNumber` uniqueness within school
   - If `studentNumber` not provided: auto-generates using `generateStudentNumber(schoolId, year)` helper
@@ -414,35 +455,38 @@ The primary way students enter the system. A multi-step form that captures all r
   - Counter stored in a `counters` table: `{ schoolId, year, lastValue }` — atomic increment
 
 **Schema addition — `counters` table:**
+
 ```typescript
 counters: defineTable({
   schoolId: v.id('schools'),
-  key: v.string(),   // e.g., 'student_number_2025', 'invoice_number_2025'
+  key: v.string(), // e.g., 'student_number_2025', 'invoice_number_2025'
   value: v.number(), // Current counter value
-}).index('by_school_key', ['schoolId', 'key'])
+}).index('by_school_key', ['schoolId', 'key']);
 ```
+
 > **Note:** This `counters` table will also be used by Sprint 02 for invoice number generation (`invoice_number_2025`) and by Sprint 04 for visitor log reference numbers. Define it now.
 
 **Frontend — `/(admin)/students/enrol/page.tsx`:**
+
 - [ ] Multi-step form (4 steps) with progress indicator:
 
   **Step 1 — Personal Information**
   - First Name*, Last Name*, Middle Name
-  - Date of Birth* (date picker, calculates age in real-time)
-  - Gender* (radio: Male / Female)
+  - Date of Birth\* (date picker, calculates age in real-time)
+  - Gender\* (radio: Male / Female)
   - NRC (text, optional — required for Grade 9+)
   - Birth Certificate Number (optional)
-  - Nationality* (default: Zambian)
+  - Nationality\* (default: Zambian)
   - Blood Group, Home Language, Religion (optional)
   - Profile Photo (upload via Cloudinary — drag-and-drop or camera on mobile)
 
   **Step 2 — Academic Placement**
-  - Academic Year* (auto-filled: current active year)
-  - Grade* (dropdown — from active grades)
-  - Section* (dropdown — filtered by selected grade, shows capacity)
-  - Boarding Status* (shown ONLY for `boarding_*` and `mixed_secondary` school types)
+  - Academic Year\* (auto-filled: current active year)
+  - Grade\* (dropdown — from active grades)
+  - Section\* (dropdown — filtered by selected grade, shows capacity)
+  - Boarding Status* (shown ONLY for `boarding\_*`and`mixed_secondary` school types)
   - Meal Plan (shown ONLY if `Feature.MEAL_PLANS` enabled AND boarding status = boarding)
-  - Admission Date* (default: today)
+  - Admission Date\* (default: today)
   - Previous School (text, optional)
 
   **Step 3 — Guardian Information**
@@ -470,14 +514,17 @@ counters: defineTable({
 **Type:** Frontend + Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 The comprehensive student profile page. This is the hub for all student-related actions — viewed by admins, class teachers, and guardians (in read-only form via Sprint 03).
 
 #### User Story
+
 > As a class teacher, I open a student's profile and see everything: their photo, current section, attendance this term, recent results, guardian contacts, and any medical notes. I can edit their details and add notes.
 
 #### Acceptance Criteria
 
 **Backend — `convex/students/queries.ts`:**
+
 - [ ] `getStudentById` query:
   - Returns student with resolved section name, grade name, guardian names
   - Returns attendance summary for current term: total days, present days, absent days, attendance %
@@ -491,6 +538,7 @@ The comprehensive student profile page. This is the hub for all student-related 
   - Returns lightweight list (name, number, grade, photo) — not full profile
 
 **Frontend — `/(admin)/students/[id]/page.tsx`:**
+
 - [ ] Profile header: large photo, name, student number, grade/section badge, boarding status badge, status badge
 - [ ] Tabs:
   - **Overview**: Quick stats (attendance %, current term results overview, fee status placeholder), guardian list with contact info
@@ -511,11 +559,13 @@ The comprehensive student profile page. This is the hub for all student-related 
 **Type:** Frontend + Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 The main student list page. Must handle schools with 1,500+ students efficiently via Convex cursor-based pagination. Bulk operations save admin time at start and end of year.
 
 #### Acceptance Criteria
 
 **Frontend — `/(admin)/students/page.tsx`:**
+
 - [ ] Paginated table (50 students per page) with columns: Photo, Name, Student Number, Grade/Section, Status, Boarding, Guardian Phone
 - [ ] Search bar: instant search as you type (debounced 300ms)
 - [ ] Filters panel (collapsible):
@@ -541,9 +591,11 @@ The main student list page. Must handle schools with 1,500+ students efficiently
 **Type:** Backend | **Priority:** P2 | **Estimate:** 0.5 days
 
 #### Description
+
 Generate printable student ID cards as a PDF. Printed by the school and given to students. Used as gate-pass at boarding schools and for library book issuing (Sprint 05).
 
 #### Acceptance Criteria
+
 - [ ] `convex/students/actions.ts` → `generateIdCardPdf` action:
   - Uses `@react-pdf/renderer` server-side
   - Card content: school logo, school name, student name, student number, grade/section, photo, academic year, barcode (Code 128 of student number)
@@ -561,11 +613,13 @@ Generate printable student ID cards as a PDF. Printed by the school and given to
 **Type:** Backend + Frontend | **Priority:** P2 | **Estimate:** 0.5 days
 
 #### Description
+
 Upload and manage documents associated with a student (birth certificate scans, medical certificates, transfer letters, etc.). These are stored in Cloudinary with metadata in Convex.
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 studentDocuments: defineTable({
   schoolId: v.id('schools'),
@@ -575,16 +629,18 @@ studentDocuments: defineTable({
     v.literal('nrc'),
     v.literal('medical_certificate'),
     v.literal('transfer_letter'),
-    v.literal('report_card'),          // Auto-created when report cards are generated
-    v.literal('other')
+    v.literal('report_card'), // Auto-created when report cards are generated
+    v.literal('other'),
   ),
   title: v.string(),
-  fileUrl: v.string(),               // Cloudinary URL
-  fileType: v.string(),              // 'pdf', 'jpg', 'png'
+  fileUrl: v.string(), // Cloudinary URL
+  fileType: v.string(), // 'pdf', 'jpg', 'png'
   uploadedBy: v.id('users'),
   uploadedAt: v.number(),
   notes: v.optional(v.string()),
-}).index('by_student', ['studentId']).index('by_school', ['schoolId'])
+})
+  .index('by_student', ['studentId'])
+  .index('by_school', ['schoolId']);
 ```
 
 - [ ] Upload component: drag-and-drop to Cloudinary (unsigned upload preset), then saves metadata to Convex
@@ -600,21 +656,24 @@ studentDocuments: defineTable({
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 Manages both incoming transfers (student arriving from another school) and outgoing transfers (student leaving for another school). Generates the official transfer letter PDF required by Zambia's MoE.
 
 #### User Story
+
 > As a school admin, I process an outgoing transfer for a student. I fill in the destination school, the reason, and the last school date. The system updates the student's status, clears their section assignment, generates an MoE-format transfer letter PDF, and notifies their guardian.
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 transfers: defineTable({
   schoolId: v.id('schools'),
   studentId: v.id('students'),
   direction: v.union(v.literal('in'), v.literal('out')),
-  fromSchool: v.optional(v.string()),      // For transfers in
-  toSchool: v.optional(v.string()),        // For transfers out
+  fromSchool: v.optional(v.string()), // For transfers in
+  toSchool: v.optional(v.string()), // For transfers out
   reason: v.string(),
   transferDate: v.string(),
   processedBy: v.id('users'),
@@ -622,10 +681,13 @@ transfers: defineTable({
   approvedBy: v.optional(v.id('users')),
   notes: v.optional(v.string()),
   createdAt: v.number(),
-}).index('by_student', ['studentId']).index('by_school', ['schoolId'])
+})
+  .index('by_student', ['studentId'])
+  .index('by_school', ['schoolId']);
 ```
 
 **Backend — `convex/students/transfers.ts`:**
+
 - [ ] `initiateTransferOut` mutation:
   - Updates `student.status` to `'transferred_out'`
   - Sets `student.transferOutDate` and `student.transferOutSchool`
@@ -638,12 +700,14 @@ transfers: defineTable({
 - [ ] `recordTransferIn` mutation: registers an incoming student — essentially calls `enrolStudent` with `previousSchool` set and creates a `transfers` record with `direction: 'in'`
 
 **Frontend:**
+
 - [ ] "Transfer Out" button on student profile (admin only)
 - [ ] Transfer Out modal: destination school, reason, last date, notes
 - [ ] Transfer history shown in student History tab
 - [ ] Download Transfer Letter PDF button
 
 **Transfer Letter PDF Template:**
+
 - MoE letterhead format
 - School name and address
 - Student name, DOB, student number, grade last attended
@@ -658,14 +722,17 @@ transfers: defineTable({
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 At the end of an academic year, all students must be promoted to the next grade/section. This is a bulk operation that must handle edge cases: students who fail and repeat, students who graduate, and students who transfer out. This runs ONCE per year per school.
 
 #### User Story
+
 > As a school admin, at the end of the 2025 year, I run the promotion process. The system shows me all Grade 8 students. I review who should move to Grade 9A vs Grade 9B, who should repeat Grade 8, and who graduated. I confirm, and the system updates all students to their 2026 sections in a single atomic operation.
 
 #### Acceptance Criteria
 
 **Backend — `convex/students/promotions.ts`:**
+
 - [ ] `preparePromotion` query:
   - Takes `fromAcademicYearId`, `toAcademicYearId`
   - Returns all students grouped by current section
@@ -683,6 +750,7 @@ At the end of an academic year, all students must be promoted to the next grade/
 - [ ] Promotion is blocked if the target academic year has no sections created yet
 
 **Frontend — `/(admin)/students/promotion/page.tsx`:**
+
 - [ ] Step 1: Select source year → target year
 - [ ] Step 2: Grade-by-grade review table
   - Each row: student photo, name, terminal exam score, suggested action (color-coded)
@@ -704,11 +772,13 @@ At the end of an academic year, all students must be promoted to the next grade/
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Manage class sections (8A, 8B, Form 2 Sciences, etc.). Each section has a class teacher, a capacity, and is linked to a grade and academic year.
 
 #### Acceptance Criteria
 
 **Backend — `convex/academics/sections.ts`:**
+
 - [ ] `createSection` mutation:
   - Args: `{ gradeId, academicYearId, name, displayName, capacity?, room?, classTeacherId? }`
   - Validates name uniqueness within grade × academic year
@@ -724,6 +794,7 @@ Manage class sections (8A, 8B, Form 2 Sciences, etc.). Each section has a class 
 - [ ] `getSectionCapacityStatus` query: returns `{ capacity, enrolled, available }` for a section
 
 **Frontend — `/(admin)/academics/sections/page.tsx`:**
+
 - [ ] Sections grouped by grade in a grid view
 - [ ] Each section card: name, class teacher, enrolled/capacity bar, quick actions
 - [ ] "Add Section" button per grade row
@@ -737,11 +808,13 @@ Manage class sections (8A, 8B, Form 2 Sciences, etc.). Each section has a class 
 **Type:** Backend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Track every section change a student has been through for full historical accuracy. This feeds the student profile History tab and provides the audit data for MoE reporting.
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 sectionHistory: defineTable({
   schoolId: v.id('schools'),
@@ -750,17 +823,19 @@ sectionHistory: defineTable({
   gradeId: v.id('grades'),
   academicYearId: v.id('academicYears'),
   fromDate: v.string(),
-  toDate: v.optional(v.string()),    // Null if current placement
+  toDate: v.optional(v.string()), // Null if current placement
   reason: v.union(
     v.literal('initial_enrolment'),
     v.literal('section_transfer'),
     v.literal('grade_promotion'),
     v.literal('grade_repeat'),
-    v.literal('year_end')
+    v.literal('year_end'),
   ),
   changedBy: v.id('users'),
   createdAt: v.number(),
-}).index('by_student', ['studentId']).index('by_school', ['schoolId'])
+})
+  .index('by_student', ['studentId'])
+  .index('by_school', ['schoolId']);
 ```
 
 - [ ] `getSectionHistory` query: returns full section history for a student
@@ -775,9 +850,11 @@ sectionHistory: defineTable({
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Move a student from one section to another within the same grade and academic year (e.g., 8A to 8B). Different from school-to-school transfer (ISSUE-053).
 
 #### Acceptance Criteria
+
 - [ ] `transferBetweenSections` mutation:
   - Updates `student.currentSectionId`
   - Creates `sectionHistory` record with `reason: 'section_transfer'`
@@ -793,11 +870,13 @@ Move a student from one section to another within the same grade and academic ye
 **Type:** Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Class teachers need a dedicated view of their section — their "home base" in the system. This is the first thing a class teacher sees when they log in.
 
 #### Acceptance Criteria
 
 **Frontend — `/(teacher)/my-class/page.tsx`:**
+
 - [ ] Reads `staff.classSectionId` from `useMe()` — if null, shows "You have not been assigned a class"
 - [ ] Section header: section name, grade, academic year, enrolled count
 - [ ] Student roster: photo, name, attendance this week (mini bar), last result average
@@ -817,14 +896,17 @@ Class teachers need a dedicated view of their section — their "home base" in t
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Assign teachers to subjects and sections. This drives the timetable (which teacher can teach which subject to which section), the mark entry screen (teacher only sees their own subjects), and the Sprint 05 LMS course creation.
 
 #### User Story
+
 > As a school admin, I assign Mr. Phiri to teach Mathematics in Grade 9A, 9B, and 10A. The system validates he is available for those sections and shows a warning if there's a potential timetable conflict.
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 staffSubjectAssignments: defineTable({
   schoolId: v.id('schools'),
@@ -832,16 +914,18 @@ staffSubjectAssignments: defineTable({
   subjectId: v.id('subjects'),
   sectionId: v.id('sections'),
   academicYearId: v.id('academicYears'),
-  termId: v.optional(v.id('terms')),   // Null = all terms; set if one-term assignment
-  isPrimaryTeacher: v.boolean(),        // Can there be a second/substitute teacher?
+  termId: v.optional(v.id('terms')), // Null = all terms; set if one-term assignment
+  isPrimaryTeacher: v.boolean(), // Can there be a second/substitute teacher?
   createdAt: v.number(),
-}).index('by_school', ['schoolId'])
+})
+  .index('by_school', ['schoolId'])
   .index('by_staff', ['staffId'])
   .index('by_section', ['sectionId'])
-  .index('by_subject_section', ['subjectId', 'sectionId'])
+  .index('by_subject_section', ['subjectId', 'sectionId']);
 ```
 
 **Backend — `convex/staff/assignments.ts`:**
+
 - [ ] `assignStaffToSubjectSection` mutation: creates `staffSubjectAssignments` record, validates no duplicate
 - [ ] `removeStaffAssignment` mutation: removes assignment — checks if this teacher has open exam results not yet locked before allowing removal
 - [ ] `getAssignmentsForStaff` query: all subject-section assignments for a teacher
@@ -849,6 +933,7 @@ staffSubjectAssignments: defineTable({
 - [ ] `getUnassignedSubjects` query: returns subjects in a section that have no teacher assigned yet — useful for admin to identify gaps
 
 **Frontend — `/(admin)/staff/[id]/assignments/page.tsx`:**
+
 - [ ] Teacher profile tab: "Assignments" listing all their section-subject pairs for current year
 - [ ] "Add Assignment" → select Grade → Section → Subject
 - [ ] Workload indicator: number of sections per teacher (flag if > school's max, configurable)
@@ -861,11 +946,13 @@ staffSubjectAssignments: defineTable({
 **Type:** Backend + Frontend | **Priority:** P2 | **Estimate:** 0.5 days
 
 #### Description
+
 Track teacher/staff attendance separately from student attendance. This is required for MoE reporting and for the substitute teacher workflow.
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 staffAttendance: defineTable({
   schoolId: v.id('schools'),
@@ -875,19 +962,23 @@ staffAttendance: defineTable({
     v.literal('present'),
     v.literal('absent'),
     v.literal('on_leave'),
-    v.literal('late')
+    v.literal('late'),
   ),
-  leaveType: v.optional(v.union(
-    v.literal('annual'),
-    v.literal('sick'),
-    v.literal('maternity_paternity'),
-    v.literal('compassionate'),
-    v.literal('unpaid')
-  )),
+  leaveType: v.optional(
+    v.union(
+      v.literal('annual'),
+      v.literal('sick'),
+      v.literal('maternity_paternity'),
+      v.literal('compassionate'),
+      v.literal('unpaid'),
+    ),
+  ),
   notes: v.optional(v.string()),
   markedBy: v.id('users'),
   createdAt: v.number(),
-}).index('by_school', ['schoolId']).index('by_staff_date', ['staffId', 'date'])
+})
+  .index('by_school', ['schoolId'])
+  .index('by_staff_date', ['staffId', 'date']);
 ```
 
 - [ ] Admin can mark daily staff attendance in bulk: `/admin/staff/attendance`
@@ -902,11 +993,13 @@ staffAttendance: defineTable({
 **Type:** Backend + Frontend | **Priority:** P2 | **Estimate:** 0.5 days
 
 #### Description
+
 Staff leave requests, approvals, and balances. Integrates with staff attendance (approved leave auto-marks attendance).
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 leaveRequests: defineTable({
   schoolId: v.id('schools'),
@@ -921,7 +1014,9 @@ leaveRequests: defineTable({
   responseNote: v.optional(v.string()),
   submittedAt: v.number(),
   respondedAt: v.optional(v.number()),
-}).index('by_school', ['schoolId']).index('by_staff', ['staffId'])
+})
+  .index('by_school', ['schoolId'])
+  .index('by_staff', ['staffId']);
 ```
 
 - [ ] Staff can submit leave requests from their profile
@@ -942,14 +1037,17 @@ leaveRequests: defineTable({
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 The core timetable data model and CRUD operations. The timetable is per-section and per-term, defining which teacher teaches which subject in which room at which time on which day.
 
 #### User Story
+
 > As a school admin, I build the timetable for Grade 9A for Term 1. I assign each period (Monday Period 1, Monday Period 2...) to a subject and teacher. The system warns me if a teacher is double-booked.
 
 #### Acceptance Criteria
 
 **Backend — `convex/academics/timetable.ts`:**
+
 - [ ] `createTimetableSlot` mutation:
   - Args: `{ sectionId, subjectId, staffId, dayOfWeek (0–6), startTime, endTime, room?, termId }`
   - Validates teacher conflict: no overlapping slots for the same `staffId` on the same day/time (across all their sections)
@@ -963,6 +1061,7 @@ The core timetable data model and CRUD operations. The timetable is per-section 
 - [ ] `copyTimetableToNextTerm` mutation: copies all slots from one term to another (time-saver at term start)
 
 **Schema addition to `timetableSlots`:**
+
 ```typescript
 // Add to existing timetableSlots table from Sprint 00 skeleton
 isPublished: v.boolean(),
@@ -977,9 +1076,11 @@ notes: v.optional(v.string()),  // e.g., "Lab session — Room 14"
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 1.5 days
 
 #### Description
+
 A visual drag-and-drop timetable editor for school admins. The grid shows days × periods. Subjects/teachers are dragged from a palette onto slots.
 
 #### Acceptance Criteria
+
 - [ ] `/(admin)/academics/timetable/page.tsx` — section selector at top
 - [ ] Timetable grid: rows = time periods (configurable: e.g., 07:00–07:45, 07:45–08:30...), columns = Mon–Fri
 - [ ] Period configuration: admin sets school's period structure (start time, duration, break periods) in settings — stored on school document
@@ -999,23 +1100,27 @@ A visual drag-and-drop timetable editor for school admins. The grid shows days �
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Schools have different period structures (number of periods, duration, break times). This must be configured per school before the timetable builder works.
 
 #### Acceptance Criteria
 
 **Schema addition to `schools`:**
+
 ```typescript
 periodConfig: v.object({
-  periodsPerDay: v.number(),          // e.g., 8
-  periods: v.array(v.object({
-    number: v.number(),               // 1, 2, 3...
-    label: v.string(),                // 'Period 1', 'Assembly', 'Break', 'Lunch'
-    startTime: v.string(),            // '07:00'
-    endTime: v.string(),              // '07:45'
-    isBreak: v.boolean(),             // If true: no subject assigned
-    isOptional: v.boolean(),          // Some schools have optional 8th period
-  })),
-})
+  periodsPerDay: v.number(), // e.g., 8
+  periods: v.array(
+    v.object({
+      number: v.number(), // 1, 2, 3...
+      label: v.string(), // 'Period 1', 'Assembly', 'Break', 'Lunch'
+      startTime: v.string(), // '07:00'
+      endTime: v.string(), // '07:45'
+      isBreak: v.boolean(), // If true: no subject assigned
+      isOptional: v.boolean(), // Some schools have optional 8th period
+    }),
+  ),
+});
 ```
 
 - [ ] Settings page at `/(admin)/settings/periods` — add, edit, reorder periods
@@ -1030,9 +1135,11 @@ periodConfig: v.object({
 **Type:** Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Read-only timetable views for students and parents. Simple, clean, and mobile-friendly.
 
 #### Acceptance Criteria
+
 - [ ] `/(student)/timetable/page.tsx` — reads `getTimetableForSection` for the student's section
 - [ ] Weekly grid: today highlighted, current period highlighted (if currently in session)
 - [ ] List view toggle: chronological list per day (better for mobile)
@@ -1052,12 +1159,15 @@ Read-only timetable views for students and parents. Simple, clean, and mobile-fr
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 The complete backend for marking, updating, and querying attendance. Designed for offline replay — mutations are idempotent using `clientId` deduplication.
 
 #### Acceptance Criteria
 
 **Backend — `convex/attendance/mutations.ts`:**
+
 - [ ] `markBulkAttendance` mutation — the primary offline-capable mutation:
+
   ```typescript
   // Args
   {
@@ -1072,6 +1182,7 @@ The complete backend for marking, updating, and querying attendance. Designed fo
     }>
   }
   ```
+
   - **Idempotency**: check if `attendance` record with same `studentId + date + period + schoolId` already exists; if so, update rather than insert
   - **School day check**: validates the date is a school day (`isSchoolDay()` from `schoolEvents` table — if public holiday, rejects with clear message)
   - **Future date check**: rejects dates in the future
@@ -1098,14 +1209,17 @@ The complete backend for marking, updating, and querying attendance. Designed fo
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 2 days
 
 #### Description
+
 The attendance register is the most used feature in the system and the most critical to work offline. A teacher in a classroom with no Airtel signal must be able to complete the register and have it sync automatically when connectivity returns.
 
 #### User Story
+
 > As Mr. Phiri, a Grade 9A class teacher, I open the register app at 07:30. I have no signal. I mark all 35 students (25 present, 3 late, 7 absent). I submit. The app says "Saved — will sync when online." At 08:15 when the school WiFi kicks in, the register syncs silently and the guardian SMSes fire.
 
 #### Acceptance Criteria
 
 **Offline Architecture:**
+
 - [ ] `src/hooks/useOfflineQueue.ts` — completed (scaffolded in Sprint 00, now fully implemented):
   - Uses IndexedDB (via `idb` package) to store pending mutations
   - Queue structure: `{ id: string, mutation: string, args: object, attemptCount: number, createdAt: number }`
@@ -1118,6 +1232,7 @@ The attendance register is the most used feature in the system and the most crit
 - [ ] Sync status banner: "3 records pending sync" (amber) → "All synced" (green, fades after 3s) → "Sync failed — tap to retry" (red)
 
 **Frontend — `/(teacher)/register/page.tsx`:**
+
 - [ ] Section selector: shows class teacher's assigned section by default; can switch sections if teacher teaches multiple (based on `staffSubjectAssignments`)
 - [ ] Date selector: defaults to today; calendar picker allows retroactive edit within window
 - [ ] Period selector: shown only if `Feature.PERIOD_ATTENDANCE` is enabled; defaults to "Daily Register"
@@ -1132,6 +1247,7 @@ The attendance register is the most used feature in the system and the most crit
 - [ ] Historical register view: admin can see which teacher marked the register and at what time
 
 **PWA Configuration:**
+
 - [ ] Service Worker configured (Workbox) to cache the register page and offline fallback
 - [ ] Manifest updated to allow "Add to Home Screen" — register opens as standalone app on teacher's phone
 - [ ] Pre-cache: section's student list, photos, and today's date when teacher opens app while online
@@ -1143,9 +1259,11 @@ The attendance register is the most used feature in the system and the most crit
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 0.5 days | **Feature Gate:** `Feature.BOARDING`
 
 #### Description
+
 A separate attendance session for boarding students' evening study period. Uses the same `attendance` table as day attendance but with `period: 'night_prep'` and is restricted to students with `boardingStatus: 'boarding'`.
 
 #### Acceptance Criteria
+
 - [ ] `/(admin)/boarding/night-prep/page.tsx` (accessible to `matron` and `school_admin` roles)
 - [ ] Reuses the attendance register UI (ISSUE-067) but pre-filtered to boarding students only
 - [ ] Period value stored as a special string: `'night_prep'` (not a number)
@@ -1161,9 +1279,11 @@ A separate attendance session for boarding students' evening study period. Uses 
 **Type:** Backend + Frontend | **Priority:** P2 | **Estimate:** 0.5 days | **Feature Gate:** `Feature.PERIOD_ATTENDANCE`
 
 #### Description
+
 For schools that want period-level attendance (primarily secondary and colleges), each teacher marks attendance for their subject period. This uses the same `attendance` table with `period` set to the timetable period number.
 
 #### Acceptance Criteria
+
 - [ ] When `Feature.PERIOD_ATTENDANCE` is enabled, subject teachers see their timetable slots in `/(teacher)/register`
 - [ ] Each timetable slot for the current day becomes a markable register
 - [ ] Teacher can only mark attendance for their assigned slots
@@ -1177,18 +1297,23 @@ For schools that want period-level attendance (primarily secondary and colleges)
 **Type:** Backend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 A scheduled Convex function that runs daily and identifies students at risk due to attendance patterns. Alerts are sent to class teachers and admins.
 
 #### Acceptance Criteria
 
 **`convex/crons.ts` — add daily job:**
+
 ```typescript
-crons.daily('chronic-absenteeism-check', { hourUTC: 16, minuteUTC: 0 }, // 18:00 CAT
-  internal.attendance.detectChronicAbsenteeism
-)
+crons.daily(
+  'chronic-absenteeism-check',
+  { hourUTC: 16, minuteUTC: 0 }, // 18:00 CAT
+  internal.attendance.detectChronicAbsenteeism,
+);
 ```
 
 **`convex/attendance/jobs.ts` → `detectChronicAbsenteeism`:**
+
 - [ ] For each active school, for each student:
   - Calculate attendance % for current term
   - Flag if: 3+ consecutive absences OR attendance % drops below configurable threshold (default: 80%)
@@ -1205,17 +1330,20 @@ crons.daily('chronic-absenteeism-check', { hourUTC: 16, minuteUTC: 0 }, // 18:00
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Attendance reports for admin — daily, weekly, monthly, and term summary — available as on-screen views and downloadable PDFs.
 
 #### Acceptance Criteria
 
 **`convex/attendance/reports.ts`:**
+
 - [ ] `getDailyAttendanceReport` query: all sections' attendance for a given date — shows which sections have marked and which haven't
 - [ ] `getTermAttendanceReport` query: per-student attendance summary for the whole term — used for report cards and MoE returns
 - [ ] `getSectionAttendanceTrend` query: weekly attendance % for a section over a term (charted in UI)
 - [ ] `getMoEAttendanceReturn` query: formats data for Ministry of Education statistical return format
 
 **Frontend — `/(admin)/attendance/reports/page.tsx`:**
+
 - [ ] Daily summary: school-wide view — sections marked vs not, total absent count, chronically absent list
 - [ ] Term summary: filterable table with export to CSV
 - [ ] Trend chart: school-wide attendance % by week this term (using recharts, already installed)
@@ -1234,14 +1362,17 @@ Attendance reports for admin — daily, weekly, monthly, and term summary — av
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1.5 days
 
 #### Description
+
 Implement the SMS dispatch layer using both Airtel Zambia and MTN Zambia APIs. The system auto-selects the provider based on the recipient's number prefix (0971/0961 = Airtel, 0976/0966 = MTN) for best delivery rates. Falls back to the other provider if the primary fails.
 
 #### User Story
+
 > As the system, when I need to send an SMS to +260 97 123 4567, I detect this is an Airtel number and send via the Airtel SMS API. If that fails, I retry via MTN. I log the outcome either way.
 
 #### Acceptance Criteria
 
 **`convex/notifications/sms.ts` (Convex Action — can call external APIs):**
+
 - [ ] `sendSms` internal action:
   - Args: `{ to: string, body: string, schoolId: Id<'schools'>, notificationId: Id<'notifications'> }`
   - Detects carrier from number prefix: Zambia network prefix map in `src/lib/constants/zambia.ts`
@@ -1261,6 +1392,7 @@ Implement the SMS dispatch layer using both Airtel Zambia and MTN Zambia APIs. T
   - Fallback for Airtel failures and for MTN subscribers
 
 - [ ] **Schema additions to `notifications` table:**
+
   ```typescript
   // Add to notifications table
   providerMessageId: v.optional(v.string()),
@@ -1282,14 +1414,17 @@ Implement the SMS dispatch layer using both Airtel Zambia and MTN Zambia APIs. T
 **Type:** Backend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Automatically notify guardians when their child is marked absent. This is the most high-value notification in the system — it is the main reason schools adopt the platform.
 
 #### User Story
+
 > At 07:50, Mr. Phiri submits Grade 9A's register. Chanda Banda is marked absent. At 07:55, Chanda's mother receives an SMS: "Dear Mrs. Banda, your child Chanda was absent from school today, Thursday 15 May 2025. Contact: Kabulonga Boys 0211 123456."
 
 #### Acceptance Criteria
 
 **`convex/notifications/absenceAlerts.ts`:**
+
 - [ ] `sendAbsenceSMS` internal action (scheduled by `markBulkAttendance` mutation):
   - Loads student + guardianLinks
   - Finds guardians with `receiveSMS: true` AND `receiveAttendanceSMS: true`
@@ -1301,12 +1436,14 @@ Automatically notify guardians when their child is marked absent. This is the mo
 - [ ] **Deduplication**: if student is marked absent, then the register is corrected to present, send a follow-up "Correction SMS": "Update: [StudentName] is now showing as PRESENT on [Date]."
 - [ ] **Custom SMS templates** per school: stored in `school.smsTemplates` object (schema addition):
   ```typescript
-  smsTemplates: v.optional(v.object({
-    absenceAlert: v.optional(v.string()),   // Supports {{guardianName}}, {{studentName}}, {{date}}
-    feeReminder: v.optional(v.string()),    // Sprint 02
-    resultRelease: v.optional(v.string()),  // Sprint 01 exam results
-    schoolClosure: v.optional(v.string()),  // General broadcast
-  }))
+  smsTemplates: v.optional(
+    v.object({
+      absenceAlert: v.optional(v.string()), // Supports {{guardianName}}, {{studentName}}, {{date}}
+      feeReminder: v.optional(v.string()), // Sprint 02
+      resultRelease: v.optional(v.string()), // Sprint 01 exam results
+      schoolClosure: v.optional(v.string()), // General broadcast
+    }),
+  );
   ```
 - [ ] Template preview in school settings: shows rendered SMS with sample data
 
@@ -1317,11 +1454,13 @@ Automatically notify guardians when their child is marked absent. This is the mo
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 School admin can send mass SMS messages to any combination of guardians, staff, or students. Essential for school closure alerts, exam timetable releases, results announcements.
 
 #### Acceptance Criteria
 
 **`convex/notifications/broadcast.ts`:**
+
 - [ ] `sendBroadcastSMS` mutation:
   - Args: `{ target: 'all_guardians' | 'grade_guardians' | 'section_guardians' | 'all_staff' | 'custom_numbers', gradeId?, sectionId?, customNumbers?: string[], message: string }`
   - Calculates recipient count before sending (shown to admin as preview)
@@ -1332,6 +1471,7 @@ School admin can send mass SMS messages to any combination of guardians, staff, 
   - Requires `requirePermission(ctx, Permission.SEND_BULK_SMS)`
 
 **Frontend — `/(admin)/notifications/compose/page.tsx`:**
+
 - [ ] Recipient selector: All Guardians / By Grade / By Section / All Staff / Custom Numbers
 - [ ] Character counter (160 chars = 1 SMS unit; warns at 155, 315 chars)
 - [ ] Recipient count preview: "This will send to 347 numbers (estimated 347 SMS units)"
@@ -1346,9 +1486,11 @@ School admin can send mass SMS messages to any combination of guardians, staff, 
 **Type:** Backend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Complete the in-app notification backend — making the notification bell (from Sprint 00 ISSUE-036) functional with real data. Every system action that triggers an SMS also creates an in-app notification.
 
 #### Acceptance Criteria
+
 - [ ] `createNotification` internal mutation — used by all other notification-triggering code:
   ```typescript
   // Internal — called by absence alerts, fee reminders, broadcasts, etc.
@@ -1357,14 +1499,14 @@ Complete the in-app notification backend — making the notification bell (from 
       schoolId: v.id('schools'),
       recipientUserId: v.optional(v.id('users')),
       recipientPhone: v.optional(v.string()),
-      type: v.string(),                  // 'absence_alert', 'fee_reminder', etc.
+      type: v.string(), // 'absence_alert', 'fee_reminder', etc.
       channel: v.string(),
       subject: v.optional(v.string()),
       body: v.string(),
       relatedEntityType: v.optional(v.string()),
       relatedEntityId: v.optional(v.string()),
-    }
-  })
+    },
+  });
   ```
 - [ ] `getUnreadCount` query: returns count for the topbar bell badge
 - [ ] `getMyNotifications` query: paginated list for the notification centre
@@ -1384,14 +1526,17 @@ Complete the in-app notification backend — making the notification bell (from 
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Create and manage exam sessions (CA1, CA2, Terminal, Mock, Final). An exam session defines the assessment event; exam results are individual student scores within that session.
 
 #### User Story
+
 > As a school admin, I create "Term 1 CA1" as an exam session for the current term. I assign it to all sections, set a max mark of 30, and open it for mark entry. Teachers can now enter marks.
 
 #### Acceptance Criteria
 
 **Backend — `convex/exams/sessions.ts`:**
+
 - [ ] `createExamSession` mutation:
   - Requires `requirePermission(ctx, Permission.CREATE_EXAM_SESSION)`
   - Validates no duplicate `type` + `termId` for the same school (e.g., can't have two CA1s in the same term)
@@ -1409,6 +1554,7 @@ Create and manage exam sessions (CA1, CA2, Terminal, Mock, Final). An exam sessi
   - Used by admin to chase up missing marks before locking
 
 **Frontend — `/(admin)/exams/sessions/page.tsx`:**
+
 - [ ] Timeline of exam sessions per term (ordered by date)
 - [ ] Session status: Draft → Open → Locked → Results Published
 - [ ] Mark entry progress matrix: rows = sections, columns = subjects, cells = % complete
@@ -1422,14 +1568,17 @@ Create and manage exam sessions (CA1, CA2, Terminal, Mock, Final). An exam sessi
 **Type:** Frontend + Backend | **Priority:** P0 | **Estimate:** 1.5 days
 
 #### Description
+
 The mark entry screen used by teachers. Fast, keyboard-navigable, and accessible from the teacher portal. Teachers only see their own assigned subjects.
 
 #### User Story
+
 > As Mr. Phiri (Grade 9A, 9B, 10A Mathematics teacher), I open mark entry for "Term 1 CA1". I see three subject-section combinations. I click into Grade 9A Mathematics and see 35 students. I type marks with Tab key to advance to the next student. I submit.
 
 #### Acceptance Criteria
 
 **Backend — `convex/exams/results.ts`:**
+
 - [ ] `saveMarksBulk` mutation:
   - Args: `{ examSessionId, sectionId, subjectId, marks: Array<{ studentId, score: number | null, isAbsent: boolean, remarks?: string }> }`
   - Validates score is between 0 and `examSession.maxMarks`
@@ -1445,6 +1594,7 @@ The mark entry screen used by teachers. Fast, keyboard-navigable, and accessible
   - Real-time — if another device saves marks, this query updates
 
 **Frontend — `/(teacher)/marks/[sessionId]/[sectionId]/[subjectId]/page.tsx`:**
+
 - [ ] Mark entry table: student photo, name, student number, score input, absent checkbox, remarks
 - [ ] Score input: number input with max validation; turns green when valid, red when over max
 - [ ] Absent checkbox: checking it clears and disables the score field
@@ -1462,9 +1612,11 @@ The mark entry screen used by teachers. Fast, keyboard-navigable, and accessible
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 School admins can enter or edit marks on behalf of any teacher, and can edit marks even after a session is locked (with audit trail).
 
 #### Acceptance Criteria
+
 - [ ] Admin mark entry page: same UI as teacher's but without the subject restriction filter
 - [ ] Post-lock edit: `editLockedMark` mutation — requires `requirePermission(ctx, Permission.LOCK_MARKS)`, records the change in `markAuditLog` table
 - [ ] Mark audit log:
@@ -1477,7 +1629,9 @@ School admins can enter or edit marks on behalf of any teacher, and can edit mar
     editedBy: v.id('users'),
     reason: v.string(),
     editedAt: v.number(),
-  }).index('by_school', ['schoolId']).index('by_result', ['examResultId'])
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_result', ['examResultId']);
   ```
 - [ ] Admin can view audit log per exam session: who changed what, when, why
 
@@ -1488,21 +1642,23 @@ School admins can enter or edit marks on behalf of any teacher, and can edit mar
 **Type:** Backend + Frontend | **Priority:** P2 | **Estimate:** 0.5 days | **Feature Gate:** `Feature.ECZ_EXAMS`
 
 #### Description
+
 For Grade 9 and Grade 12 classes (ECZ examination years), track mock exam performance and compare against ECZ target grades. This helps identify students needing intervention before the real ECZ exam.
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 eczMockTargets: defineTable({
   schoolId: v.id('schools'),
   studentId: v.id('students'),
   subjectId: v.id('subjects'),
-  targetGrade: v.string(),         // '5', '6', '7', '8', '9' (ECZ scale)
+  targetGrade: v.string(), // '5', '6', '7', '8', '9' (ECZ scale)
   academicYearId: v.id('academicYears'),
   setBy: v.id('staff'),
   notes: v.optional(v.string()),
-}).index('by_student', ['studentId'])
+}).index('by_student', ['studentId']);
 ```
 
 - [ ] For ECZ exam year grades, class teacher can set target ECZ grades per student per subject
@@ -1516,26 +1672,30 @@ eczMockTargets: defineTable({
 **Type:** Backend + Frontend | **Priority:** P2 | **Estimate:** 0.5 days
 
 #### Description
+
 Generate a seating plan for exams. Useful for terminal exams where students from different sections sit together to prevent cheating.
 
 #### Acceptance Criteria
 
 **Schema addition:**
+
 ```typescript
 examSeatingPlans: defineTable({
   schoolId: v.id('schools'),
   examSessionId: v.id('examSessions'),
-  venue: v.string(),               // 'Main Hall', 'Room 12'
+  venue: v.string(), // 'Main Hall', 'Room 12'
   capacity: v.number(),
-  seats: v.array(v.object({
-    seatNumber: v.number(),
-    studentId: v.id('students'),
-    row: v.number(),
-    column: v.number(),
-  })),
+  seats: v.array(
+    v.object({
+      seatNumber: v.number(),
+      studentId: v.id('students'),
+      row: v.number(),
+      column: v.number(),
+    }),
+  ),
   generatedAt: v.number(),
   generatedBy: v.id('users'),
-}).index('by_session', ['examSessionId'])
+}).index('by_session', ['examSessionId']);
 ```
 
 - [ ] Admin selects: exam session, sections participating, venue, capacity
@@ -1557,34 +1717,42 @@ examSeatingPlans: defineTable({
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Each school configures their grading scale. ECZ schools use the official ECZ scale; colleges may use a percentage or GPA scale. The grading scale translates a raw score (percentage) into a grade symbol.
 
 #### Acceptance Criteria
 
 **Schema addition to `schools`:**
+
 ```typescript
-gradingScales: v.array(v.object({
-  id: v.string(),                   // UUID
-  name: v.string(),                 // 'ECZ Primary Scale', 'ECZ Secondary Scale', 'College GPA'
-  isDefault: v.boolean(),
-  entries: v.array(v.object({
-    minPercent: v.number(),         // 0–100
-    maxPercent: v.number(),
-    symbol: v.string(),             // 'A', 'B', '7', '3.5 GPA'
-    label: v.string(),              // 'Distinction', 'Merit', 'Credit', 'Fail'
-    gradePoints: v.optional(v.number()), // For GPA: 4.0, 3.5, 3.0...
-    isPassing: v.boolean(),
-  })),
-}))
+gradingScales: v.array(
+  v.object({
+    id: v.string(), // UUID
+    name: v.string(), // 'ECZ Primary Scale', 'ECZ Secondary Scale', 'College GPA'
+    isDefault: v.boolean(),
+    entries: v.array(
+      v.object({
+        minPercent: v.number(), // 0–100
+        maxPercent: v.number(),
+        symbol: v.string(), // 'A', 'B', '7', '3.5 GPA'
+        label: v.string(), // 'Distinction', 'Merit', 'Credit', 'Fail'
+        gradePoints: v.optional(v.number()), // For GPA: 4.0, 3.5, 3.0...
+        isPassing: v.boolean(),
+      }),
+    ),
+  }),
+);
 ```
 
 **Pre-configured scales seeded at school creation:**
+
 - ECZ Primary scale (Grades 1–7): 80–100 = 1 (Outstanding), 70–79 = 2, 60–69 = 3, 50–59 = 4, 40–49 = 5, 30–39 = 6, 20–29 = 7, 0–19 = 9 (Fail)
 - ECZ Secondary scale (Grades 8–12): same 1–9 but with subject-specific interpretations
 - College percentage scale: A(70+), B(60–69), C(50–59), D(40–49), F(<40)
 - College GPA scale: A=4.0, A-=3.7, B+=3.3, B=3.0... F=0.0
 
 **Frontend — `/(admin)/settings/grading/page.tsx`:**
+
 - [ ] View and edit grading scale entries (threshold, symbol, label, isPassing)
 - [ ] Add custom scale for technical subjects with practical components
 - [ ] Visual indicator showing grade distribution at current thresholds
@@ -1596,11 +1764,13 @@ gradingScales: v.array(v.object({
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 When marks are entered and a session is locked, the system automatically computes grades for every student. For multi-session terms, it computes weighted aggregates. For GPA schools, it computes credit-weighted GPA.
 
 #### Acceptance Criteria
 
 **`convex/exams/grading.ts`:**
+
 - [ ] `computeGradesForSession` internal mutation — called by `lockExamSession`:
   - For each `examResults` record in the session:
     - Calculates `percent = (score / maxMarks) * 100`
@@ -1619,35 +1789,39 @@ When marks are entered and a session is locked, the system automatically compute
   - Computes class position/rank per subject and overall
 
 - [ ] **Schema addition:**
+
   ```typescript
   termAggregates: defineTable({
     schoolId: v.id('schools'),
     studentId: v.id('students'),
     sectionId: v.id('sections'),
     termId: v.id('terms'),
-    subjectResults: v.array(v.object({
-      subjectId: v.id('subjects'),
-      totalScore: v.number(),           // Weighted aggregate
-      totalPercent: v.number(),
-      grade: v.string(),
-      gradePoints: v.optional(v.number()),
-      isCredit: v.boolean(),            // For GPA: did student earn credits?
-      creditHours: v.optional(v.number()),
-      subjectRank: v.number(),          // Rank in section for this subject
-    })),
+    subjectResults: v.array(
+      v.object({
+        subjectId: v.id('subjects'),
+        totalScore: v.number(), // Weighted aggregate
+        totalPercent: v.number(),
+        grade: v.string(),
+        gradePoints: v.optional(v.number()),
+        isCredit: v.boolean(), // For GPA: did student earn credits?
+        creditHours: v.optional(v.number()),
+        subjectRank: v.number(), // Rank in section for this subject
+      }),
+    ),
     overallPercent: v.number(),
     overallGrade: v.string(),
-    termGpa: v.optional(v.number()),    // GPA schools only
-    sectionRank: v.number(),            // Overall rank in section
-    gradeRank: v.number(),              // Overall rank in grade (all sections)
+    termGpa: v.optional(v.number()), // GPA schools only
+    sectionRank: v.number(), // Overall rank in section
+    gradeRank: v.number(), // Overall rank in grade (all sections)
     totalStudentsInSection: v.number(),
     totalStudentsInGrade: v.number(),
-    teacherRemarks: v.optional(v.string()),  // Class teacher adds term remarks
+    teacherRemarks: v.optional(v.string()), // Class teacher adds term remarks
     attendancePercent: v.optional(v.number()), // Pulled from attendance at report card gen
     computedAt: v.number(),
-  }).index('by_student_term', ['studentId', 'termId'])
+  })
+    .index('by_student_term', ['studentId', 'termId'])
     .index('by_section_term', ['sectionId', 'termId'])
-    .index('by_school_term', ['schoolId', 'termId'])
+    .index('by_school_term', ['schoolId', 'termId']);
   ```
 
 - [ ] Rank computation is per-section: all students in 9A ranked against each other
@@ -1661,9 +1835,11 @@ When marks are entered and a session is locked, the system automatically compute
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Class teachers must add overall term remarks for each student before the report card is generated. This is a required step in the Zambian school system.
 
 #### Acceptance Criteria
+
 - [ ] `saveTeacherRemarks` mutation: class teacher adds remark to `termAggregates.teacherRemarks`
   - Free-text or selectable from a pre-defined remark bank
   - Can only be done by the section's class teacher or admin
@@ -1690,11 +1866,13 @@ Class teachers must add overall term remarks for each student before the report 
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1.5 days
 
 #### Description
+
 The server-side PDF generation engine for report cards. Uses `@react-pdf/renderer` in a Convex Action. The generated PDF is uploaded to Cloudinary and a `studentDocuments` record is created so it's permanently accessible.
 
 #### Acceptance Criteria
 
 **`convex/exams/reportCards.ts` → `generateReportCard` action:**
+
 - [ ] Accepts: `{ studentId, termId }` (or bulk: `{ sectionId, termId }` for batch generation)
 - [ ] Fetches: student details, school branding, `termAggregates` record, attendance summary, `teacherRemarks`, `school.gradingScales`
 - [ ] Generates PDF using `@react-pdf/renderer` with school-specific layout
@@ -1705,7 +1883,8 @@ The server-side PDF generation engine for report cards. Uses `@react-pdf/rendere
 
 **PDF Layout — Two Modes:**
 
-*Primary Mode (Grades 1–7):*
+_Primary Mode (Grades 1–7):_
+
 - School header with logo and motto
 - Student details: name, grade, section, academic year, term
 - Results table: Subject | CA | Terminal | Total | Grade | Remarks
@@ -1714,7 +1893,8 @@ The server-side PDF generation engine for report cards. Uses `@react-pdf/rendere
 - Next term start date
 - Principal and Class Teacher signature lines
 
-*Secondary/College Mode (Grades 8–12, College):*
+_Secondary/College Mode (Grades 8–12, College):_
+
 - Same header
 - Results table: Subject | CA1 | CA2 | Terminal | Aggregate | Grade | Position
 - Subject teacher remarks column
@@ -1731,11 +1911,13 @@ The server-side PDF generation engine for report cards. Uses `@react-pdf/rendere
 **Type:** Backend + Frontend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 School admins can customize the report card template: add/remove sections, choose layout (primary vs secondary style), configure which data appears.
 
 #### Acceptance Criteria
 
 **Schema addition to `schools`:**
+
 ```typescript
 reportCardConfig: v.object({
   layout: v.union(v.literal('primary'), v.literal('secondary'), v.literal('college')),
@@ -1745,13 +1927,13 @@ reportCardConfig: v.object({
   showTeacherRemarks: v.boolean(),
   showSubjectTeacherRemarks: v.boolean(),
   showNextTermDate: v.boolean(),
-  showFeesDueNotice: v.boolean(),         // Sprint 02 populates the actual amount
+  showFeesDueNotice: v.boolean(), // Sprint 02 populates the actual amount
   showMotto: v.boolean(),
-  headerNote: v.optional(v.string()),     // Custom note at top of report card
-  footerNote: v.optional(v.string()),     // Custom note at bottom
+  headerNote: v.optional(v.string()), // Custom note at top of report card
+  footerNote: v.optional(v.string()), // Custom note at bottom
   principalSignatureName: v.optional(v.string()),
   principalTitle: v.optional(v.string()), // 'Head Teacher', 'Principal'
-})
+});
 ```
 
 - [ ] Settings page at `/(admin)/settings/report-card`
@@ -1766,11 +1948,13 @@ reportCardConfig: v.object({
 **Type:** Backend + Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Admin generates report cards for an entire section in one operation, then releases them (makes them visible to parents and students). Releasing sends an SMS notification to all guardians.
 
 #### Acceptance Criteria
 
 **`convex/exams/reportCards.ts`:**
+
 - [ ] `generateReportCardsForSection` action:
   - Checks all pre-conditions: term locked, all teacher remarks added
   - Processes students in batches of 10 (Convex action timeout protection)
@@ -1781,6 +1965,7 @@ Admin generates report cards for an entire section in one operation, then releas
 - [ ] `releaseStatus` query: per-section — total / generated / released counts
 
 **Frontend — `/(admin)/exams/report-cards/page.tsx`:**
+
 - [ ] Section selector → shows generation status per section
 - [ ] Generate button per section: shows progress bar as PDFs generate
 - [ ] Preview individual report card before releasing
@@ -1794,9 +1979,11 @@ Admin generates report cards for an entire section in one operation, then releas
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Students and parents can download their report cards from the portal. This is the most-used feature by guardians after fee payment.
 
 #### Acceptance Criteria
+
 - [ ] Student portal: `/(student)/results/page.tsx` — list of report cards per term, download button
 - [ ] Parent portal (ready for Sprint 03): `getReportCardsForStudent` query available, returns signed Cloudinary download URL
 - [ ] Download link is a signed Cloudinary URL that expires in 24 hours (security — cannot share raw permanent links)
@@ -1816,11 +2003,13 @@ Students and parents can download their report cards from the portal. This is th
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 A per-student analytics view showing their academic trajectory across terms and years. Visible to admin, class teacher, and (in read-only form) the student themselves.
 
 #### Acceptance Criteria
 
 **`convex/exams/analytics.ts`:**
+
 - [ ] `getStudentAcademicHistory` query:
   - Returns `termAggregates` for all terms the student has been in the school
   - Ordered chronologically
@@ -1830,6 +2019,7 @@ A per-student analytics view showing their academic trajectory across terms and 
   - Used to show if a student is improving or declining in a specific subject
 
 **Frontend — Student Profile "Academic" Tab:**
+
 - [ ] Line chart: overall term average per term (recharts `LineChart`)
 - [ ] Subject radar chart: all subjects' current term scores plotted on a radar
 - [ ] Position tracker: section rank and grade rank per term (trend table)
@@ -1842,11 +2032,13 @@ A per-student analytics view showing their academic trajectory across terms and 
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 Admin-level analytics comparing performance across sections and grades. The foundation for the MoE statistical reporting required in Sprint 07.
 
 #### Acceptance Criteria
 
 **`convex/exams/analytics.ts` (additions):**
+
 - [ ] `getSectionPerformanceSummary` query:
   - For a given section + term: average per subject, grade distribution, pass rate
   - Returns structured data compatible with recharts `BarChart`
@@ -1858,6 +2050,7 @@ Admin-level analytics comparing performance across sections and grades. The foun
   - Identifies teachers/sections with significantly different performance (outliers)
 
 **Frontend — `/(admin)/exams/analytics/page.tsx`:**
+
 - [ ] Grade selector → Section comparison bar chart
 - [ ] Subject performance heat map: sections × subjects, colored by average score
 - [ ] Failing students alert: "14 students in Grade 10 scored below 40% in Mathematics"
@@ -1870,9 +2063,11 @@ Admin-level analytics comparing performance across sections and grades. The foun
 **Type:** Backend | **Priority:** P2 | **Estimate:** 0.5 days
 
 #### Description
+
 Scaffold the MoE (Ministry of Education) reporting data layer. The actual report generation UI is in Sprint 07, but the queries must be defined now so that they are informed by the correct data structures from Sprint 01.
 
 #### Acceptance Criteria
+
 - [ ] `convex/reports/moe.ts` — file created with function signatures (not yet implemented):
   ```typescript
   // Defined now, implemented in Sprint 07
@@ -1891,32 +2086,32 @@ Scaffold the MoE (Ministry of Education) reporting data layer. The actual report
 
 The following additions are made to `convex/schema.ts` in this sprint. These are **additions only** — no existing Sprint 00 tables are modified.
 
-| New Table | Defined In |
-|---|---|
-| `schoolEvents` | ISSUE-043 |
-| `lessonPlans` | ISSUE-046 |
-| `counters` | ISSUE-048 |
-| `studentDocuments` | ISSUE-052 |
-| `transfers` | ISSUE-053 |
-| `sectionHistory` | ISSUE-056 |
-| `staffSubjectAssignments` | ISSUE-059 |
-| `staffAttendance` | ISSUE-060 |
-| `leaveRequests` | ISSUE-061 |
-| `markAuditLog` | ISSUE-078 |
-| `eczMockTargets` | ISSUE-079 |
-| `examSeatingPlans` | ISSUE-080 |
-| `termAggregates` | ISSUE-082 |
+| New Table                 | Defined In |
+| ------------------------- | ---------- |
+| `schoolEvents`            | ISSUE-043  |
+| `lessonPlans`             | ISSUE-046  |
+| `counters`                | ISSUE-048  |
+| `studentDocuments`        | ISSUE-052  |
+| `transfers`               | ISSUE-053  |
+| `sectionHistory`          | ISSUE-056  |
+| `staffSubjectAssignments` | ISSUE-059  |
+| `staffAttendance`         | ISSUE-060  |
+| `leaveRequests`           | ISSUE-061  |
+| `markAuditLog`            | ISSUE-078  |
+| `eczMockTargets`          | ISSUE-079  |
+| `examSeatingPlans`        | ISSUE-080  |
+| `termAggregates`          | ISSUE-082  |
 
 **Fields added to existing tables:**
 
-| Table | New Fields | Added In |
-|---|---|---|
-| `schools` | `periodConfig`, `smsTemplates`, `gradingScales`, `reportCardConfig` | Multiple issues |
-| `timetableSlots` | `isPublished`, `week`, `notes` | ISSUE-062 |
-| `notifications` | `providerMessageId`, `providerResponse`, `retryCount`, `nextRetryAt` | ISSUE-072 |
-| `examResults` | `gradePoints`, `computedGrade` | ISSUE-082 |
-| `termAggregates` | `isReleased` | ISSUE-086 |
-| `lmsCourses` | (already has needed fields from Sprint 00 skeleton) | — |
+| Table            | New Fields                                                           | Added In        |
+| ---------------- | -------------------------------------------------------------------- | --------------- |
+| `schools`        | `periodConfig`, `smsTemplates`, `gradingScales`, `reportCardConfig`  | Multiple issues |
+| `timetableSlots` | `isPublished`, `week`, `notes`                                       | ISSUE-062       |
+| `notifications`  | `providerMessageId`, `providerResponse`, `retryCount`, `nextRetryAt` | ISSUE-072       |
+| `examResults`    | `gradePoints`, `computedGrade`                                       | ISSUE-082       |
+| `termAggregates` | `isReleased`                                                         | ISSUE-086       |
+| `lmsCourses`     | (already has needed fields from Sprint 00 skeleton)                  | —               |
 
 ---
 
@@ -2002,5 +2197,5 @@ Before Sprint 02 (Fees & Finance) begins, verify:
 
 ---
 
-*EduZambia Development Guide — Sprint 01 — Core Academic Foundation*
-*Last updated: 2025 | Previous Sprint: Sprint 00 — Infrastructure & Auth | Next Sprint: Sprint 02 — Fees & Finance*
+_EduZambia Development Guide — Sprint 01 — Core Academic Foundation_
+_Last updated: 2025 | Previous Sprint: Sprint 00 — Infrastructure & Auth | Next Sprint: Sprint 02 — Fees & Finance_

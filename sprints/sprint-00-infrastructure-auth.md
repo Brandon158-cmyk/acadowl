@@ -1,4 +1,5 @@
 # EduZambia — Sprint 00: Infrastructure & Authentication
+
 ## Development Guide & Issue Tracker
 
 > **Sprint Goal:** Stand up a fully working, production-ready foundation that every future sprint builds on without revisiting. By the end of this sprint, any developer joining the project can spin up a local environment, authenticate as any role, and see the correct feature-gated UI for any school type — with zero hardcoded assumptions.
@@ -27,27 +28,27 @@
 
 ## Sprint Overview
 
-| Field | Value |
-|---|---|
-| **Sprint Name** | Sprint 00 — Infrastructure & Auth |
-| **Duration** | 4 weeks |
-| **Team Size** | 2–3 developers |
-| **Total Issues** | 38 |
-| **Priority** | All issues are blocking for Sprint 01 |
+| Field            | Value                                 |
+| ---------------- | ------------------------------------- |
+| **Sprint Name**  | Sprint 00 — Infrastructure & Auth     |
+| **Duration**     | 4 weeks                               |
+| **Team Size**    | 2–3 developers                        |
+| **Total Issues** | 38                                    |
+| **Priority**     | All issues are blocking for Sprint 01 |
 
 ### Sprint Epics at a Glance
 
-| # | Epic | Issues | Est. Days |
-|---|---|---|---|
-| 1 | Project Scaffolding & Tooling | 4 | 3 |
-| 2 | Convex Schema Foundation | 6 | 5 |
-| 3 | Authentication System | 7 | 5 |
-| 4 | Multi-Tenancy Engine | 5 | 4 |
-| 5 | Feature Flag System | 4 | 3 |
-| 6 | Role-Based Access Control | 5 | 4 |
-| 7 | Base UI Shell & Navigation | 5 | 4 |
-| 8 | School Onboarding Flow | 4 | 4 |
-| 9 | Developer Experience & Testing | 4 | 2 |
+| #   | Epic                           | Issues | Est. Days |
+| --- | ------------------------------ | ------ | --------- |
+| 1   | Project Scaffolding & Tooling  | 4      | 3         |
+| 2   | Convex Schema Foundation       | 6      | 5         |
+| 3   | Authentication System          | 7      | 5         |
+| 4   | Multi-Tenancy Engine           | 5      | 4         |
+| 5   | Feature Flag System            | 4      | 3         |
+| 6   | Role-Based Access Control      | 5      | 4         |
+| 7   | Base UI Shell & Navigation     | 5      | 4         |
+| 8   | School Onboarding Flow         | 4      | 4         |
+| 9   | Developer Experience & Testing | 4      | 2         |
 
 ---
 
@@ -56,21 +57,27 @@
 These decisions are **permanent** and apply to every future sprint. Every developer must read and understand these before starting any issue.
 
 ### 1. Convex is the Single Backend
+
 There is no separate Express/Node server. All backend logic — queries, mutations, scheduled jobs, and external API calls — lives in the `convex/` directory. Next.js API routes are **only** used for webhook ingestion (Airtel Money, MTN MoMo, ZRA) and Next.js-specific server actions where required.
 
 ### 2. Every Document is School-Scoped
+
 Every Convex table (except `schools` itself and `platformAdmins`) has a `schoolId: v.id('schools')` field. Every query has an index on `schoolId`. Middleware enforces this — a query that returns data without checking `schoolId` will be rejected in code review.
 
 ### 3. Feature Flags Gate Everything
+
 No module assumes it is always available. Every route, every nav item, every Convex function that belongs to an optional module must check the relevant `Feature` flag before executing. This is non-negotiable. Day 1 of building the boarding module, the feature check goes in.
 
 ### 4. Roles are Composable, Not Hierarchical
+
 A user has one `role` but roles are evaluated as a set of permissions, not a ladder. A `MATRON` has permissions that a `TEACHER` does not, and vice versa. Use permission functions, not role comparisons in business logic.
 
 ### 5. The Schema is the Contract
+
 The Convex schema defined in Sprint 00 is the contract for all future sprints. **Additive changes are always allowed. Breaking changes require a migration plan.** Future sprints add new tables and new optional fields — they never rename or remove fields that exist from Sprint 00.
 
 ### 6. Design for Offline from Day 1
+
 Mutations that will be used offline (primarily attendance) must be structured so the offline queue can replay them idempotently. The `_id` for offline records must be generated client-side (use `crypto.randomUUID()`) and the mutation must accept an optional `clientId` field for deduplication.
 
 ---
@@ -302,12 +309,15 @@ eduzambia/
 **Type:** Setup | **Priority:** P0 — Blocking all other issues | **Estimate:** 0.5 days
 
 #### Description
+
 Initialize the project repository with Next.js 14 (App Router), Convex, and all core dependencies. This is the first commit and establishes the exact versions every other developer will use.
 
 #### User Story
+
 > As a developer joining the project, I can clone the repository, run `npm install && npm run dev`, and see a working Next.js app connected to a Convex development deployment within 5 minutes.
 
 #### Acceptance Criteria
+
 - [ ] Next.js 14 initialized with TypeScript, Tailwind CSS, and App Router (`src/` directory)
 - [ ] Convex initialized with `npx convex dev` working and generating `convex/_generated/`
 - [ ] `convex-helpers` installed for useful utilities
@@ -320,6 +330,7 @@ Initialize the project repository with Next.js 14 (App Router), Convex, and all 
 - [ ] `npm run type-check` script added and passes
 
 #### Dependencies Installed
+
 ```json
 {
   "dependencies": {
@@ -354,6 +365,7 @@ Initialize the project repository with Next.js 14 (App Router), Convex, and all 
 ```
 
 #### Technical Notes
+
 - Use `npx create-next-app@latest` with `--typescript --tailwind --app --src-dir --import-alias "@/*"` flags
 - Then run `npx convex dev --once` to initialize Convex and get the `CONVEX_DEPLOYMENT` URL
 - Do NOT use `next/font` with Google Fonts in the root layout yet — that comes in ISSUE-026
@@ -365,12 +377,15 @@ Initialize the project repository with Next.js 14 (App Router), Convex, and all 
 **Type:** Setup | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Install and configure shadcn/ui as the component foundation. Initialize all components that will be used across the entire system so they are available from Sprint 01 onwards. Also install and configure supporting libraries.
 
 #### User Story
+
 > As a developer, I have access to a consistent, accessible component library so I never write raw HTML for inputs, buttons, dialogs, or tables.
 
 #### Acceptance Criteria
+
 - [ ] shadcn/ui initialized with `npx shadcn-ui@latest init` using the **Neutral** base color
 - [ ] The following shadcn components pre-installed:
   - Layout: `card`, `separator`, `sheet`, `dialog`, `drawer`
@@ -389,6 +404,7 @@ Install and configure shadcn/ui as the component foundation. Initialize all comp
 - [ ] Dark mode configured as `class` strategy (not media query) for future admin theme toggle
 
 #### Technical Notes
+
 - The `--school-primary` CSS variable defaults to EduZambia green (`#1a6b3c`) and is overridden by the ThemeProvider in ISSUE-032 using the school's branding colors
 - Add a `tailwind.config.ts` extension: `colors: { school: { primary: 'hsl(var(--school-primary))', ... } }`
 
@@ -399,9 +415,11 @@ Install and configure shadcn/ui as the component foundation. Initialize all comp
 **Type:** Setup | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Enforce code quality standards from day one. Every commit must pass linting and type-checking automatically. This prevents technical debt from accumulating across a multi-developer sprint.
 
 #### Acceptance Criteria
+
 - [ ] ESLint configured with `eslint-config-next`, TypeScript rules, and import ordering rules
 - [ ] Prettier configured with `prettier-plugin-tailwindcss` for consistent class ordering
 - [ ] `.prettierrc` settings: `singleQuote: true`, `trailingComma: 'all'`, `semi: true`, `tabWidth: 2`
@@ -414,6 +432,7 @@ Enforce code quality standards from day one. Every commit must pass linting and 
 - [ ] CI workflow (`.github/workflows/ci.yml`) runs `lint`, `type-check`, and `test` on every PR
 
 #### ESLint Rules of Note
+
 ```json
 {
   "rules": {
@@ -432,12 +451,15 @@ Enforce code quality standards from day one. Every commit must pass linting and 
 **Type:** Setup | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Configure Next.js and the deployment environment to support subdomain-based multi-tenancy. Each school accesses their instance via `{schoolSlug}.eduzambia.zm`. The middleware must extract the school slug from the hostname on every request before any route handler runs.
 
 #### User Story
+
 > As a school admin at Kabulonga Boys, when I visit `kabulonga.eduzambia.zm`, the system shows me Kabulonga's data. If I somehow access `chengelo.eduzambia.zm`, I see Chengelo's data — never mixed up.
 
 #### Acceptance Criteria
+
 - [ ] `next.config.ts` configured to allow all subdomains of `eduzambia.zm`
 - [ ] `src/middleware.ts` created at the root of `src/` (Next.js middleware location)
 - [ ] Middleware correctly extracts `schoolSlug` from:
@@ -452,6 +474,7 @@ Configure Next.js and the deployment environment to support subdomain-based mult
 - [ ] Local development documented in `README.md` — how to set up `kabulonga.localhost` on Mac/Linux/Windows
 
 #### Technical Notes
+
 - Use `next-subdomain` package or manual hostname parsing — do NOT use `@vercel/edge-config` (avoids Vercel lock-in)
 - The `x-school-slug` header is read in Server Components via `headers()` from `next/headers`
 - Convex queries do NOT use this header — they use the `schoolId` from the authenticated user's identity (set during login). The header is for server-rendered pages and non-authenticated routes only.
@@ -470,12 +493,15 @@ Configure Next.js and the deployment environment to support subdomain-based mult
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1.5 days
 
 #### Description
+
 Define the foundational Convex schema tables for schools (tenants), users, and the academic hierarchy. These tables are referenced by every other table in the system. This is the most critical issue in the sprint.
 
 #### User Story
+
 > As the system architect, I need the database schema to fully represent the real-world structure of a Zambian school — including class sections, terms, and academic years — so that future developers can build any module without altering the core structure.
 
 #### Acceptance Criteria
+
 - [ ] `convex/schema.ts` created with all tables in this issue defined
 - [ ] All tables have indexes defined inline — no missing indexes
 - [ ] TypeScript types inferred from the schema exported via `Doc<'tableName'>` pattern
@@ -484,41 +510,42 @@ Define the foundational Convex schema tables for schools (tenants), users, and t
 #### Tables to Define
 
 **`schools`** — The tenant table. One row per school.
+
 ```typescript
 schools: defineTable({
-  slug: v.string(),                    // URL-safe identifier: 'kabulonga-boys'
-  name: v.string(),                    // 'Kabulonga Boys Secondary School'
-  shortName: v.optional(v.string()),   // 'KBS' — used in report card headers
+  slug: v.string(), // URL-safe identifier: 'kabulonga-boys'
+  name: v.string(), // 'Kabulonga Boys Secondary School'
+  shortName: v.optional(v.string()), // 'KBS' — used in report card headers
   type: v.union(
     v.literal('day_primary'),
     v.literal('day_secondary'),
     v.literal('boarding_primary'),
     v.literal('boarding_secondary'),
-    v.literal('mixed_secondary'),      // Some boarders, some day students
+    v.literal('mixed_secondary'), // Some boarders, some day students
     v.literal('college'),
-    v.literal('technical')
+    v.literal('technical'),
   ),
-  province: v.string(),                // 'Lusaka' — from zambia.ts constants
-  district: v.string(),                // 'Lusaka'
+  province: v.string(), // 'Lusaka' — from zambia.ts constants
+  district: v.string(), // 'Lusaka'
   address: v.string(),
   phone: v.string(),
   email: v.optional(v.string()),
 
   // Regulatory
-  moeCode: v.optional(v.string()),     // Ministry of Education school code
-  heaCode: v.optional(v.string()),     // Higher Education Authority code (colleges)
-  zraTpin: v.string(),                 // ZRA Tax Payer ID Number — required for invoicing
+  moeCode: v.optional(v.string()), // Ministry of Education school code
+  heaCode: v.optional(v.string()), // Higher Education Authority code (colleges)
+  zraTpin: v.string(), // ZRA Tax Payer ID Number — required for invoicing
   zraVsdcSerial: v.optional(v.string()), // VSDC device serial after ZRA registration
 
   // Academic configuration — controls how exams, grading, and calendar work
   gradingMode: v.union(
-    v.literal('ecz'),                  // ECZ 1-9 scale (primary/secondary)
-    v.literal('percentage'),           // Raw percentage (some colleges)
-    v.literal('gpa')                   // 4.0 GPA scale (colleges/tertiary)
+    v.literal('ecz'), // ECZ 1-9 scale (primary/secondary)
+    v.literal('percentage'), // Raw percentage (some colleges)
+    v.literal('gpa'), // 4.0 GPA scale (colleges/tertiary)
   ),
   academicMode: v.union(
-    v.literal('term'),                 // 3 terms per year (primary/secondary)
-    v.literal('semester')              // 2 semesters per year (college)
+    v.literal('term'), // 3 terms per year (primary/secondary)
+    v.literal('semester'), // 2 semesters per year (college)
   ),
   currentAcademicYearId: v.optional(v.id('academicYears')),
   currentTermId: v.optional(v.id('terms')),
@@ -528,79 +555,85 @@ schools: defineTable({
 
   // Subscription
   subscriptionTier: v.union(
-    v.literal('starter'),              // Core modules only
-    v.literal('standard'),             // + LMS, Library
-    v.literal('premium')               // + AI, Advanced analytics
+    v.literal('starter'), // Core modules only
+    v.literal('standard'), // + LMS, Library
+    v.literal('premium'), // + AI, Advanced analytics
   ),
   subscriptionExpiresAt: v.optional(v.number()), // Unix timestamp
 
   // Branding — applied to portal, report cards, invoices
   branding: v.object({
-    logoUrl: v.optional(v.string()),   // Cloudinary URL
-    primaryColor: v.string(),          // Hex: '#1a6b3c'
-    secondaryColor: v.string(),        // Hex: '#e5a100'
-    motto: v.optional(v.string()),     // 'Excellence in Education'
+    logoUrl: v.optional(v.string()), // Cloudinary URL
+    primaryColor: v.string(), // Hex: '#1a6b3c'
+    secondaryColor: v.string(), // Hex: '#e5a100'
+    motto: v.optional(v.string()), // 'Excellence in Education'
   }),
 
   // SMS
-  smsBalance: v.number(),              // Units remaining
+  smsBalance: v.number(), // Units remaining
   smsProvider: v.union(
     v.literal('airtel'),
     v.literal('mtn'),
-    v.literal('auto')                  // Tries Airtel first, falls back to MTN
+    v.literal('auto'), // Tries Airtel first, falls back to MTN
   ),
 
   // Sibling discount rules (used in fee calculation)
-  siblingDiscountRules: v.array(v.object({
-    fromChildNumber: v.number(),       // 2 = second child, 3 = third, etc.
-    discountPercent: v.number(),       // 10 = 10% discount
-    applyToFeeTypes: v.array(v.string()), // ['tuition'] or ['tuition', 'boarding']
-  })),
+  siblingDiscountRules: v.array(
+    v.object({
+      fromChildNumber: v.number(), // 2 = second child, 3 = third, etc.
+      discountPercent: v.number(), // 10 = 10% discount
+      applyToFeeTypes: v.array(v.string()), // ['tuition'] or ['tuition', 'boarding']
+    }),
+  ),
 
   // Customization
-  customStudentFields: v.array(v.object({
-    key: v.string(),                   // Machine-readable: 'home_language'
-    label: v.string(),                 // Display: 'Home Language'
-    type: v.union(
-      v.literal('text'),
-      v.literal('select'),
-      v.literal('boolean'),
-      v.literal('date')
-    ),
-    options: v.optional(v.array(v.string())), // For 'select' type
-    required: v.boolean(),
-  })),
+  customStudentFields: v.array(
+    v.object({
+      key: v.string(), // Machine-readable: 'home_language'
+      label: v.string(), // Display: 'Home Language'
+      type: v.union(
+        v.literal('text'),
+        v.literal('select'),
+        v.literal('boolean'),
+        v.literal('date'),
+      ),
+      options: v.optional(v.array(v.string())), // For 'select' type
+      required: v.boolean(),
+    }),
+  ),
 
   status: v.union(v.literal('active'), v.literal('suspended'), v.literal('trial')),
   createdAt: v.number(),
   updatedAt: v.number(),
 })
-.index('by_slug', ['slug'])
-.index('by_status', ['status'])
+  .index('by_slug', ['slug'])
+  .index('by_status', ['status']);
 ```
 
 **`academicYears`** — e.g. "2025", "2026"
+
 ```typescript
 academicYears: defineTable({
   schoolId: v.id('schools'),
-  year: v.number(),                    // 2025
-  label: v.string(),                   // '2025 Academic Year'
-  startDate: v.string(),               // 'YYYY-MM-DD'
+  year: v.number(), // 2025
+  label: v.string(), // '2025 Academic Year'
+  startDate: v.string(), // 'YYYY-MM-DD'
   endDate: v.string(),
   isActive: v.boolean(),
   createdAt: v.number(),
 })
-.index('by_school', ['schoolId'])
-.index('by_school_year', ['schoolId', 'year'])
+  .index('by_school', ['schoolId'])
+  .index('by_school_year', ['schoolId', 'year']);
 ```
 
 **`terms`** — A term or semester within an academic year
+
 ```typescript
 terms: defineTable({
   schoolId: v.id('schools'),
   academicYearId: v.id('academicYears'),
-  name: v.string(),                    // 'Term 1', 'Semester 2'
-  termNumber: v.number(),              // 1, 2, 3
+  name: v.string(), // 'Term 1', 'Semester 2'
+  termNumber: v.number(), // 1, 2, 3
   startDate: v.string(),
   endDate: v.string(),
   examStartDate: v.optional(v.string()),
@@ -608,44 +641,46 @@ terms: defineTable({
   isActive: v.boolean(),
   createdAt: v.number(),
 })
-.index('by_school', ['schoolId'])
-.index('by_academic_year', ['schoolId', 'academicYearId'])
-.index('by_school_active', ['schoolId', 'isActive'])
+  .index('by_school', ['schoolId'])
+  .index('by_academic_year', ['schoolId', 'academicYearId'])
+  .index('by_school_active', ['schoolId', 'isActive']);
 ```
 
 **`grades`** — e.g. Grade 1 through Grade 12, Form 1-6, Year 1-4 (college)
+
 ```typescript
 grades: defineTable({
   schoolId: v.id('schools'),
-  name: v.string(),                    // 'Grade 8', 'Form 1', 'Year 1'
-  level: v.number(),                   // Numeric for ordering: 8, 9, 10
-  stream: v.optional(v.string()),      // 'Sciences', 'Arts', 'Commerce' (secondary)
-  graduationGrade: v.boolean(),        // True for Grade 9 and Grade 12 (ECZ exams)
-  order: v.number(),                   // For sorting in UI
+  name: v.string(), // 'Grade 8', 'Form 1', 'Year 1'
+  level: v.number(), // Numeric for ordering: 8, 9, 10
+  stream: v.optional(v.string()), // 'Sciences', 'Arts', 'Commerce' (secondary)
+  graduationGrade: v.boolean(), // True for Grade 9 and Grade 12 (ECZ exams)
+  order: v.number(), // For sorting in UI
 })
-.index('by_school', ['schoolId'])
-.index('by_school_level', ['schoolId', 'level'])
+  .index('by_school', ['schoolId'])
+  .index('by_school_level', ['schoolId', 'level']);
 ```
 
 **`sections`** — A class section: Grade 8A, Grade 8B. This is what a student belongs to.
+
 ```typescript
 sections: defineTable({
   schoolId: v.id('schools'),
   gradeId: v.id('grades'),
   academicYearId: v.id('academicYears'),
-  name: v.string(),                    // '8A', '8B', 'Form 2 Sciences'
-  displayName: v.string(),             // 'Grade 8A' — full label for UI
+  name: v.string(), // '8A', '8B', 'Form 2 Sciences'
+  displayName: v.string(), // 'Grade 8A' — full label for UI
   classTeacherId: v.optional(v.id('staff')), // The class teacher responsible for this section
-  capacity: v.optional(v.number()),    // Max students
-  room: v.optional(v.string()),        // 'Room 12' — homeroom
-  order: v.number(),                   // For sorting: A=1, B=2, C=3
+  capacity: v.optional(v.number()), // Max students
+  room: v.optional(v.string()), // 'Room 12' — homeroom
+  order: v.number(), // For sorting: A=1, B=2, C=3
   isActive: v.boolean(),
   createdAt: v.number(),
 })
-.index('by_school', ['schoolId'])
-.index('by_grade', ['schoolId', 'gradeId'])
-.index('by_academic_year', ['schoolId', 'academicYearId'])
-.index('by_class_teacher', ['classTeacherId'])
+  .index('by_school', ['schoolId'])
+  .index('by_grade', ['schoolId', 'gradeId'])
+  .index('by_academic_year', ['schoolId', 'academicYearId'])
+  .index('by_class_teacher', ['classTeacherId']);
 ```
 
 ---
@@ -655,9 +690,11 @@ sections: defineTable({
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Define the tables for system users (authentication accounts), staff members (teachers and non-teaching), and guardians/parents. These three tables are different by design — a teacher has both a `users` record (for auth) and a `staff` record (for their professional profile).
 
 #### Acceptance Criteria
+
 - [ ] All three tables defined in `convex/schema.ts`
 - [ ] The separation between `users` (auth identity) and `staff`/`guardians` (profile) is clearly documented with inline comments
 - [ ] Indexes support all planned query patterns
@@ -665,31 +702,32 @@ Define the tables for system users (authentication accounts), staff members (tea
 #### Tables to Define
 
 **`users`** — Authentication identity. One per login. Linked to Convex Auth.
+
 ```typescript
 users: defineTable({
   // Convex Auth fields (required by @convex-dev/auth)
-  tokenIdentifier: v.string(),          // Auth token from Convex Auth
+  tokenIdentifier: v.string(), // Auth token from Convex Auth
 
   // Identity
   schoolId: v.optional(v.id('schools')), // Null for platform Super Admins only
   email: v.optional(v.string()),
-  phone: v.optional(v.string()),         // Primary login method for parents
+  phone: v.optional(v.string()), // Primary login method for parents
   name: v.string(),
   photoUrl: v.optional(v.string()),
 
   // Role — single role per user in a school context
   role: v.union(
-    v.literal('platform_admin'),         // Super admin — no schoolId
-    v.literal('school_admin'),           // Head teacher / Principal
+    v.literal('platform_admin'), // Super admin — no schoolId
+    v.literal('school_admin'), // Head teacher / Principal
     v.literal('deputy_head'),
-    v.literal('bursar'),                 // Finance only
-    v.literal('teacher'),                // Subject teacher
-    v.literal('class_teacher'),          // Has a section assigned
-    v.literal('matron'),                 // Boarding — hostel management
+    v.literal('bursar'), // Finance only
+    v.literal('teacher'), // Subject teacher
+    v.literal('class_teacher'), // Has a section assigned
+    v.literal('matron'), // Boarding — hostel management
     v.literal('librarian'),
-    v.literal('driver'),                 // Transport module
-    v.literal('guardian'),               // Parent / guardian
-    v.literal('student')                 // Student self-portal
+    v.literal('driver'), // Transport module
+    v.literal('guardian'), // Parent / guardian
+    v.literal('student'), // Student self-portal
   ),
 
   // Profile links — one user can be linked to a staff, guardian, or student profile
@@ -704,25 +742,26 @@ users: defineTable({
     email: v.boolean(),
     inApp: v.boolean(),
   }),
-  uiLanguage: v.optional(v.string()),    // 'en', 'ny' (Nyanja), 'bem' (Bemba)
+  uiLanguage: v.optional(v.string()), // 'en', 'ny' (Nyanja), 'bem' (Bemba)
 
   isActive: v.boolean(),
   lastLoginAt: v.optional(v.number()),
   createdAt: v.number(),
   updatedAt: v.number(),
 })
-.index('by_token', ['tokenIdentifier'])
-.index('by_school', ['schoolId'])
-.index('by_email', ['email'])
-.index('by_phone', ['phone'])
-.index('by_role', ['schoolId', 'role'])
+  .index('by_token', ['tokenIdentifier'])
+  .index('by_school', ['schoolId'])
+  .index('by_email', ['email'])
+  .index('by_phone', ['phone'])
+  .index('by_role', ['schoolId', 'role']);
 ```
 
 **`staff`** — Professional profile for teachers and all other school employees.
+
 ```typescript
 staff: defineTable({
   schoolId: v.id('schools'),
-  userId: v.id('users'),               // Linked auth account
+  userId: v.id('users'), // Linked auth account
 
   // Personal
   firstName: v.string(),
@@ -730,32 +769,30 @@ staff: defineTable({
   middleName: v.optional(v.string()),
   gender: v.union(v.literal('M'), v.literal('F')),
   dateOfBirth: v.optional(v.string()),
-  nrc: v.optional(v.string()),         // National Registration Card
+  nrc: v.optional(v.string()), // National Registration Card
   phone: v.string(),
   altPhone: v.optional(v.string()),
   email: v.optional(v.string()),
   photoUrl: v.optional(v.string()),
   address: v.optional(v.string()),
-  emergencyContact: v.optional(v.object({
-    name: v.string(),
-    phone: v.string(),
-    relation: v.string(),
-  })),
+  emergencyContact: v.optional(
+    v.object({
+      name: v.string(),
+      phone: v.string(),
+      relation: v.string(),
+    }),
+  ),
 
   // Professional
-  staffCategory: v.union(
-    v.literal('teaching'),
-    v.literal('non_teaching'),
-    v.literal('admin')
-  ),
-  jobTitle: v.string(),                // 'Teacher', 'Accounts Clerk', 'Security Officer'
-  tcazNumber: v.optional(v.string()),  // TCAZ registration — teaching staff only
+  staffCategory: v.union(v.literal('teaching'), v.literal('non_teaching'), v.literal('admin')),
+  jobTitle: v.string(), // 'Teacher', 'Accounts Clerk', 'Security Officer'
+  tcazNumber: v.optional(v.string()), // TCAZ registration — teaching staff only
   employeeNumber: v.optional(v.string()),
   contractType: v.union(
     v.literal('permanent'),
     v.literal('contract'),
     v.literal('volunteer'),
-    v.literal('intern')
+    v.literal('intern'),
   ),
   dateJoined: v.string(),
   dateLeft: v.optional(v.string()),
@@ -763,8 +800,8 @@ staff: defineTable({
   // Payroll-ready (used by payroll export in Sprint 03+)
   bankName: v.optional(v.string()),
   bankAccountNumber: v.optional(v.string()),
-  napsaNumber: v.optional(v.string()),  // National Pension Scheme Authority
-  nhimaNumber: v.optional(v.string()),  // National Health Insurance
+  napsaNumber: v.optional(v.string()), // National Pension Scheme Authority
+  nhimaNumber: v.optional(v.string()), // National Health Insurance
 
   // Subjects and sections this staff member teaches — populated in Sprint 01
   subjectIds: v.array(v.id('subjects')),
@@ -775,22 +812,23 @@ staff: defineTable({
   createdAt: v.number(),
   updatedAt: v.number(),
 })
-.index('by_school', ['schoolId'])
-.index('by_user', ['userId'])
-.index('by_school_status', ['schoolId', 'status'])
-.index('by_tcaz', ['tcazNumber'])
+  .index('by_school', ['schoolId'])
+  .index('by_user', ['userId'])
+  .index('by_school_status', ['schoolId', 'status'])
+  .index('by_tcaz', ['tcazNumber']);
 ```
 
 **`guardians`** — Parent or guardian profile. One account, potentially multiple children.
+
 ```typescript
 guardians: defineTable({
   schoolId: v.id('schools'),
-  userId: v.id('users'),               // Linked auth account
+  userId: v.id('users'), // Linked auth account
 
   // Personal
   firstName: v.string(),
   lastName: v.string(),
-  phone: v.string(),                   // Primary — used for OTP login + SMS
+  phone: v.string(), // Primary — used for OTP login + SMS
   altPhone: v.optional(v.string()),
   email: v.optional(v.string()),
   nrc: v.optional(v.string()),
@@ -799,11 +837,7 @@ guardians: defineTable({
   address: v.optional(v.string()),
 
   // Preferences
-  preferredContactMethod: v.union(
-    v.literal('sms'),
-    v.literal('whatsapp'),
-    v.literal('both')
-  ),
+  preferredContactMethod: v.union(v.literal('sms'), v.literal('whatsapp'), v.literal('both')),
   receiveAttendanceSMS: v.boolean(),
   receiveResultsSMS: v.boolean(),
   receiveFeeReminderSMS: v.boolean(),
@@ -811,14 +845,14 @@ guardians: defineTable({
   // NOTE: guardian-to-student links are stored on the STUDENT document
   // as student.guardianLinks[]. This is queried from both sides.
 
-  isVerified: v.boolean(),             // Phone number verified via OTP
+  isVerified: v.boolean(), // Phone number verified via OTP
   createdAt: v.number(),
   updatedAt: v.number(),
 })
-.index('by_school', ['schoolId'])
-.index('by_user', ['userId'])
-.index('by_phone', ['phone'])
-.index('by_school_phone', ['schoolId', 'phone'])
+  .index('by_school', ['schoolId'])
+  .index('by_user', ['userId'])
+  .index('by_phone', ['phone'])
+  .index('by_school_phone', ['schoolId', 'phone']);
 ```
 
 ---
@@ -828,9 +862,11 @@ guardians: defineTable({
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Define the `students` table. This is the central table of the entire system — it references sections, guardians, beds (boarding), routes (transport), and drives fee invoicing. It must be defined completely now, even for fields that won't be populated until Sprint 04 or 06.
 
 #### Acceptance Criteria
+
 - [ ] `students` table defined in schema with all fields including future-module fields
 - [ ] Guardian link structure supports multiple guardians per student with granular permissions
 - [ ] All indexes defined for planned query patterns
@@ -843,19 +879,19 @@ students: defineTable({
   schoolId: v.id('schools'),
 
   // Identifiers
-  studentNumber: v.string(),           // Auto-generated: 'KBS-2025-0001'
-  externalId: v.optional(v.string()),  // ECZ exam number, GRZ school number
+  studentNumber: v.string(), // Auto-generated: 'KBS-2025-0001'
+  externalId: v.optional(v.string()), // ECZ exam number, GRZ school number
 
   // Personal
   firstName: v.string(),
   lastName: v.string(),
   middleName: v.optional(v.string()),
   preferredName: v.optional(v.string()), // Nickname used in day-to-day
-  dateOfBirth: v.string(),             // 'YYYY-MM-DD'
+  dateOfBirth: v.string(), // 'YYYY-MM-DD'
   gender: v.union(v.literal('M'), v.literal('F')),
-  nrc: v.optional(v.string()),         // Populated at Grade 9+ or when available
+  nrc: v.optional(v.string()), // Populated at Grade 9+ or when available
   birthCertNumber: v.optional(v.string()),
-  nationality: v.string(),             // Default: 'Zambian'
+  nationality: v.string(), // Default: 'Zambian'
   homeLanguage: v.optional(v.string()),
   religion: v.optional(v.string()),
   photoUrl: v.optional(v.string()),
@@ -869,36 +905,40 @@ students: defineTable({
   previousSchool: v.optional(v.string()),
 
   // Guardian links — supports multiple guardians with different permissions
-  guardianLinks: v.array(v.object({
-    guardianId: v.id('guardians'),
-    isPrimary: v.boolean(),            // Primary contact for all communications
-    relation: v.string(),              // 'mother', 'father', 'uncle', 'guardian'
-    canPayFees: v.boolean(),
-    canSeeResults: v.boolean(),
-    canSeeAttendance: v.boolean(),
-    receiveSMS: v.boolean(),
-    canAuthorizeLeave: v.boolean(),    // Boarding: can authorize exeat
-    isEmergencyContact: v.boolean(),
-  })),
+  guardianLinks: v.array(
+    v.object({
+      guardianId: v.id('guardians'),
+      isPrimary: v.boolean(), // Primary contact for all communications
+      relation: v.string(), // 'mother', 'father', 'uncle', 'guardian'
+      canPayFees: v.boolean(),
+      canSeeResults: v.boolean(),
+      canSeeAttendance: v.boolean(),
+      receiveSMS: v.boolean(),
+      canAuthorizeLeave: v.boolean(), // Boarding: can authorize exeat
+      isEmergencyContact: v.boolean(),
+    }),
+  ),
 
   // Boarding — populated when Feature.BOARDING is active (Sprint 04)
   boardingStatus: v.union(v.literal('day'), v.literal('boarding')),
-  currentBedId: v.optional(v.id('beds')),        // Sprint 04
+  currentBedId: v.optional(v.id('beds')), // Sprint 04
   boardingHouseId: v.optional(v.id('hostelBlocks')), // Sprint 04
-  mealPlanType: v.optional(v.union(
-    v.literal('full_board'),           // 3 meals/day
-    v.literal('half_board'),           // 2 meals/day
-    v.literal('none')
-  )),
+  mealPlanType: v.optional(
+    v.union(
+      v.literal('full_board'), // 3 meals/day
+      v.literal('half_board'), // 2 meals/day
+      v.literal('none'),
+    ),
+  ),
 
   // Transport — populated when Feature.TRANSPORT is active (Sprint 06)
-  transportRouteId: v.optional(v.id('routes')),   // Sprint 06
-  boardingStopId: v.optional(v.string()),          // Stop within the route
-  transportTermStart: v.optional(v.string()),      // Start date of transport subscription
+  transportRouteId: v.optional(v.id('routes')), // Sprint 06
+  boardingStopId: v.optional(v.string()), // Stop within the route
+  transportTermStart: v.optional(v.string()), // Start date of transport subscription
 
   // Health — always available, more detail added in boarding sprint
   bloodGroup: v.optional(v.string()),
-  medicalConditions: v.optional(v.string()),       // Asthma, diabetes, etc.
+  medicalConditions: v.optional(v.string()), // Asthma, diabetes, etc.
   medications: v.optional(v.string()),
   allergies: v.optional(v.string()),
   specialNeeds: v.optional(v.string()),
@@ -906,9 +946,7 @@ students: defineTable({
   doctorPhone: v.optional(v.string()),
 
   // Custom fields — school-defined (schema stores key-value pairs)
-  customFieldValues: v.record(v.string(), v.union(
-    v.string(), v.number(), v.boolean(), v.null()
-  )),
+  customFieldValues: v.record(v.string(), v.union(v.string(), v.number(), v.boolean(), v.null())),
 
   // Status
   status: v.union(
@@ -916,7 +954,7 @@ students: defineTable({
     v.literal('transferred_out'),
     v.literal('graduated'),
     v.literal('withdrawn'),
-    v.literal('deceased')
+    v.literal('deceased'),
   ),
   transferOutDate: v.optional(v.string()),
   transferOutSchool: v.optional(v.string()),
@@ -929,11 +967,11 @@ students: defineTable({
   updatedAt: v.number(),
   createdBy: v.id('users'),
 })
-.index('by_school', ['schoolId'])
-.index('by_section', ['currentSectionId'])
-.index('by_school_status', ['schoolId', 'status'])
-.index('by_student_number', ['schoolId', 'studentNumber'])
-.index('by_school_year', ['schoolId', 'currentAcademicYearId'])
+  .index('by_school', ['schoolId'])
+  .index('by_section', ['currentSectionId'])
+  .index('by_school_status', ['schoolId', 'status'])
+  .index('by_student_number', ['schoolId', 'studentNumber'])
+  .index('by_school_year', ['schoolId', 'currentAcademicYearId']);
 ```
 
 ---
@@ -943,12 +981,15 @@ students: defineTable({
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1.5 days
 
 #### Description
+
 Define skeleton (minimal but complete) table structures for every future module. These tables will not have query/mutation functions written until their sprint, but the schema must be defined now so that foreign key references from core tables (`students.currentBedId`, `students.transportRouteId`, etc.) are valid.
 
 #### Why This Matters
+
 If we don't define `beds` now, `students.currentBedId: v.id('beds')` will fail schema validation. We don't want to touch the `students` table again later to add this field.
 
 #### Acceptance Criteria
+
 - [ ] All tables listed below defined in `convex/schema.ts` with minimal but correct field definitions
 - [ ] All tables have at least a `schoolId` index and a `by_school` index
 - [ ] Each table has an inline `// Sprint XX` comment showing when it will be fully implemented
@@ -1156,12 +1197,15 @@ lmsSubmissions: defineTable({
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Create the shared internal utility functions that every Convex query and mutation will use. These enforce school scoping, feature flags, and role checks at the function level — not just the UI level.
 
 #### User Story
+
 > As a developer writing a new Convex mutation, I use `requireRole(ctx, ['teacher', 'admin'])` at the top of my function and know that if someone calls it without the right role, it throws a standardized error — I don't need to write auth logic myself.
 
 #### Acceptance Criteria
+
 - [ ] `convex/_lib/schoolContext.ts` — extracts and validates school from auth identity
 - [ ] `convex/_lib/permissions.ts` — role-based permission check functions
 - [ ] `convex/_lib/featureGuard.ts` — throws if a required feature is not enabled for the school
@@ -1208,9 +1252,11 @@ export function canDo(userRole: Role, permission: Permission): boolean {
 **Type:** Backend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Create a seed script that populates a development Convex deployment with realistic test data. Every developer should be able to run this script and immediately have a working system with multiple school types to test against.
 
 #### Acceptance Criteria
+
 - [ ] `convex/seed.ts` created as a Convex Action (can be triggered from dashboard)
 - [ ] Script creates the following test schools:
   - `kabulonga` — Day Secondary (standard features)
@@ -1236,13 +1282,16 @@ Create a seed script that populates a development Convex deployment with realist
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Configure `@convex-dev/auth` with two authentication providers: Phone OTP (via SMS) and Email+Password. Both providers must store the authenticated user's `schoolId` and `role` in their profile, which is then accessible in every Convex function via `ctx.auth.getUserIdentity()`.
 
 #### User Story
+
 > As a parent, I log in with my phone number. I receive an SMS OTP. I enter it and I'm in. I never need to remember a password.
 > As a teacher, I log in with my school email and password. I'm in.
 
 #### Acceptance Criteria
+
 - [ ] `convex/auth.ts` configured with `convexAuth()` using both providers
 - [ ] Phone OTP provider configured:
   - Sends OTP via Airtel/MTN SMS (dev mode: logs OTP to console)
@@ -1260,6 +1309,7 @@ Configure `@convex-dev/auth` with two authentication providers: Phone OTP (via S
 - [ ] Both providers work in development without real SMS (mock SMS logs to terminal)
 
 #### Environment Variables Required
+
 ```
 CONVEX_AUTH_PRIVATE_KEY=
 JWKS=
@@ -1274,12 +1324,15 @@ AUTH_MTN_SMS_API_KEY=          # Dev: leave empty for console logging
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Build the email/password login page at `/(auth)/login`. This is used by teachers, admins, bursars, and other staff. The page must resolve the school from the subdomain and show the school's branding.
 
 #### User Story
+
 > As a teacher at Kabulonga Boys, when I visit `kabulonga.eduzambia.zm/login`, I see Kabulonga's logo and colors, enter my email and password, and am redirected to my teacher dashboard.
 
 #### Acceptance Criteria
+
 - [ ] Page renders at `/(auth)/login`
 - [ ] Form has: email field, password field, "Sign In" button, "Login with phone instead" link
 - [ ] School name and logo displayed in header (fetched from `getSchoolBySlug` using `x-school-slug` header)
@@ -1307,12 +1360,15 @@ Build the email/password login page at `/(auth)/login`. This is used by teachers
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Build the two-step phone OTP login flow. Step 1: enter phone number. Step 2: enter 6-digit OTP received via SMS. This is the primary login method for guardians/parents.
 
 #### User Story
+
 > As a parent, I enter my Zambian phone number (+260 or 0971...), receive an SMS with a 6-digit code, enter it, and I'm taken to my child's portal. It works on any phone with a browser.
 
 #### Acceptance Criteria
+
 - [ ] Step 1 page at `/(auth)/login-otp`: phone number input with Zambian flag prefix (+260)
 - [ ] Phone number validation:
   - Accepts: `0971234567`, `971234567`, `+260971234567`
@@ -1335,12 +1391,15 @@ Build the two-step phone OTP login flow. Step 1: enter phone number. Step 2: ent
 **Type:** Frontend + Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Create the auth layout (minimal, branded wrapper for login pages) and the Next.js middleware/server-side route protection that ensures authenticated users are in the right route group for their role.
 
 #### User Story
+
 > As the system, when an unauthenticated user visits `/dashboard`, I redirect them to `/login`. When an authenticated guardian tries to access an admin route, I redirect them to their own dashboard.
 
 #### Acceptance Criteria
+
 - [ ] `/(auth)/layout.tsx` created:
   - Centered card layout
   - School logo at top (or EduZambia logo if no school)
@@ -1365,12 +1424,15 @@ Create the auth layout (minimal, branded wrapper for login pages) and the Next.j
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 When a user authenticates for the first time, or when their profile hasn't been linked yet, the system must resolve their `role`, `schoolId`, and link them to their `staff`, `guardian`, or `student` profile. This is the bridge between the auth identity and the application data.
 
 #### User Story
+
 > As a school admin, when I create a new teacher account, I set their phone number. When that teacher logs in for the first time, the system automatically finds their `staff` record by phone number and links their user account to it — they don't have to do anything.
 
 #### Acceptance Criteria
+
 - [ ] `convex/users/mutations.ts` → `resolveUserProfile` mutation:
   - Called after every successful login
   - Checks if `user.staffId`, `user.guardianId`, or `user.studentId` are null
@@ -1391,9 +1453,11 @@ When a user authenticates for the first time, or when their profile hasn't been 
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Staff members who forget their email/password can request a reset. Given that email delivery is unreliable in Zambia, the reset code is sent via SMS to the staff member's registered phone number.
 
 #### Acceptance Criteria
+
 - [ ] Page at `/(auth)/forgot-password` with email input
 - [ ] On submit: Convex mutation looks up user by email + schoolId, generates a 6-digit reset code, stores it (hashed) with a 30-minute expiry, sends SMS to user's phone number
 - [ ] Reset code entry page: user enters the 6-digit SMS code + new password (confirm password field)
@@ -1408,12 +1472,15 @@ Staff members who forget their email/password can request a reset. Given that em
 **Type:** Frontend + Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 The Platform Super Admin needs to be able to create new school accounts. This is the entry point for onboarding new schools to the platform. The school creation form is only accessible to `platform_admin` role users at `platform.eduzambia.zm`.
 
 #### User Story
+
 > As the EduZambia platform admin, I fill in a school's details (name, type, province, ZRA TPIN), assign a subscription tier, and the system creates a school with sensible default features enabled based on school type. I then create the first admin user for that school.
 
 #### Acceptance Criteria
+
 - [ ] Page at `/(platform)/schools/new`
 - [ ] Form fields: School Name, Short Name, Type (dropdown), Province, District, Address, Phone, ZRA TPIN, MOE Code (optional), HEA Code (optional, shown only for college type), Subscription Tier
 - [ ] On submit: `convex/schools/mutations.ts` → `createSchool` mutation:
@@ -1442,12 +1509,15 @@ The Platform Super Admin needs to be able to create new school accounts. This is
 **Type:** Backend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 Every Convex query and mutation that accesses school-scoped data must go through a scoping layer that automatically validates and injects `schoolId`. This prevents accidental cross-tenant data leakage — the most critical security requirement in the system.
 
 #### User Story
+
 > As a security reviewer, I can see that it is architecturally impossible for a query run in the context of School A to ever return a document belonging to School B.
 
 #### Acceptance Criteria
+
 - [ ] `convex/_lib/schoolContext.ts` updated with `withSchoolScope` helper:
   ```typescript
   // Pattern: every school-scoped query MUST use this
@@ -1468,9 +1538,11 @@ Every Convex query and mutation that accesses school-scoped data must go through
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Create the React context and hook that makes the current school's data available to any client component. This includes the school's branding, enabled features, and academic configuration.
 
 #### Acceptance Criteria
+
 - [ ] `src/providers/SchoolProvider.tsx` created:
   - Uses `useQuery(api.schools.queries.getSchoolBySlug, { slug })` to fetch school
   - Exposes `school`, `features`, `gradingMode`, `academicMode`, `branding` via context
@@ -1486,12 +1558,15 @@ Create the React context and hook that makes the current school's data available
 **Type:** Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 Each school has custom branding (logo, primary color, secondary color, motto). The ThemeProvider injects these as CSS variables into the document root, causing the entire UI to reflect the school's colors without any component needing to know what school they're rendering for.
 
 #### User Story
+
 > As a Chengelo Secondary admin, when I open the portal, I see Chengelo's logo and their branded colors — not the default EduZambia green. It feels like Chengelo's own system.
 
 #### Acceptance Criteria
+
 - [ ] `src/providers/ThemeProvider.tsx` reads `school.branding` from `useSchool()`
 - [ ] On mount (and when branding changes): sets CSS variables on `document.documentElement`:
   - `--school-primary`: hex color from `branding.primaryColor`
@@ -1511,9 +1586,11 @@ Each school has custom branding (logo, primary color, secondary color, motto). T
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 School admins need to be able to set their school's branding. This is the first settings page built and proves the settings architecture works.
 
 #### Acceptance Criteria
+
 - [ ] Page at `/(admin)/settings/branding`
 - [ ] Form: Upload Logo (image upload to Cloudinary), Primary Color picker, Secondary Color picker, School Motto text input
 - [ ] Logo upload: drag-and-drop or click to upload, max 2MB, PNG/JPG/SVG only, preview shown immediately
@@ -1530,9 +1607,11 @@ School admins need to be able to set their school's branding. This is the first 
 **Type:** Frontend + Backend | **Priority:** P2 | **Estimate:** 1 day
 
 #### Description
+
 Schools need to add custom fields to the student profile for data specific to their institution (e.g., "Church Parish", "Previous Province"). These fields appear in the student enrolment form and profile view.
 
 #### Acceptance Criteria
+
 - [ ] Page at `/(admin)/settings/custom-fields`
 - [ ] "Add Field" form: Label, Type (text/select/boolean/date), Required toggle, Options (if select type)
 - [ ] Fields listed in a drag-and-drop reorderable list
@@ -1555,9 +1634,11 @@ Schools need to add custom fields to the student profile for data specific to th
 **Type:** Shared (Frontend + Backend) | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 The Feature enum, presets, and runtime helpers form the Feature Flag Engine. This is a shared module — the same Feature enum is used in both `convex/` functions and `src/` client code.
 
 #### Acceptance Criteria
+
 - [ ] `src/lib/features/flags.ts` — Feature enum with all 30+ values defined:
   ```typescript
   export enum Feature {
@@ -1616,12 +1697,15 @@ The Feature enum, presets, and runtime helpers form the Feature Flag Engine. Thi
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 School admins need a UI to enable and disable optional features within their subscription tier. This page is the admin's control panel for what their school's version of EduZambia looks like.
 
 #### User Story
+
 > As the admin of a day school that just got a bus, I go to Settings → Features, toggle on "Transport Management", and the Transport menu item immediately appears in my sidebar.
 
 #### Acceptance Criteria
+
 - [ ] Page at `/(admin)/settings/features`
 - [ ] Features organized into groups: Academic, Residential, Transport, Library, Add-ons
 - [ ] Each feature shows: icon, name, short description, who it adds to the system (e.g., "Adds: Hostel management, Bed assignment, Night Prep attendance")
@@ -1639,10 +1723,13 @@ School admins need a UI to enable and disable optional features within their sub
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 A reusable React component that wraps any UI element and only renders it if a specified feature is enabled. Used throughout the codebase to gate modules, nav items, form fields, and any UI that belongs to an optional feature.
 
 #### Acceptance Criteria
+
 - [ ] `src/components/school/FeatureGuard.tsx` component:
+
   ```tsx
   // Usage examples:
   <FeatureGuard feature={Feature.BOARDING}>
@@ -1657,6 +1744,7 @@ A reusable React component that wraps any UI element and only renders it if a sp
     <LiveMapWidget />
   </FeatureGuard>
   ```
+
 - [ ] Props: `feature: Feature`, `fallback?: ReactNode` (default: `null`), `requires?: Feature` (parent feature that must also be enabled)
 - [ ] Uses `useFeature()` hook internally
 - [ ] Does not render `children` during loading (prevents flash)
@@ -1669,20 +1757,22 @@ A reusable React component that wraps any UI element and only renders it if a sp
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 The navigation sidebars for Admin, Teacher, and Parent must dynamically build their nav items based on enabled features and user role. This is not a static nav — it's assembled at runtime.
 
 #### Acceptance Criteria
+
 - [ ] `src/lib/navigation/adminNavConfig.ts` — array of nav item configurations:
   ```typescript
   type NavItem = {
     label: string;
     href: string;
     icon: LucideIcon;
-    requiredFeature?: Feature;    // Hidden if feature disabled
+    requiredFeature?: Feature; // Hidden if feature disabled
     requiredPermission?: Permission; // Hidden if role lacks permission
-    children?: NavItem[];         // Sub-menu items
+    children?: NavItem[]; // Sub-menu items
     badge?: 'new' | 'beta';
-  }
+  };
   ```
 - [ ] `AdminSidebar.tsx` iterates `adminNavConfig`, wraps each item in `FeatureGuard` + `PermissionGuard`
 - [ ] Items for modules not yet built (Sprint 02+) are included in the nav config but point to a `ComingSoon` placeholder page — this avoids having to touch the nav config file again
@@ -1703,39 +1793,75 @@ The navigation sidebars for Admin, Teacher, and Parent must dynamically build th
 **Type:** Shared | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Define the complete list of permissions in the system and map each role to its allowed permissions. This is the single source of truth for all access control decisions.
 
 #### Acceptance Criteria
+
 - [ ] `src/lib/roles/types.ts` — `Role` enum (matching `users.role` in schema) and `Permission` enum
 - [ ] All permissions defined upfront — including ones for modules in Sprint 04, 05, 06:
   ```typescript
   export enum Permission {
     // Students
-    ENROL_STUDENT, VIEW_STUDENTS, EDIT_STUDENT, TRANSFER_STUDENT, PROMOTE_STUDENTS,
+    ENROL_STUDENT,
+    VIEW_STUDENTS,
+    EDIT_STUDENT,
+    TRANSFER_STUDENT,
+    PROMOTE_STUDENTS,
     // Staff
-    CREATE_STAFF, VIEW_STAFF, EDIT_STAFF,
+    CREATE_STAFF,
+    VIEW_STAFF,
+    EDIT_STAFF,
     // Attendance
-    MARK_ATTENDANCE, VIEW_ATTENDANCE, EDIT_ATTENDANCE_RETROACTIVE,
+    MARK_ATTENDANCE,
+    VIEW_ATTENDANCE,
+    EDIT_ATTENDANCE_RETROACTIVE,
     // Exams
-    CREATE_EXAM_SESSION, ENTER_MARKS, LOCK_MARKS, VIEW_ALL_RESULTS, VIEW_CLASS_RESULTS, GENERATE_REPORT_CARDS,
+    CREATE_EXAM_SESSION,
+    ENTER_MARKS,
+    LOCK_MARKS,
+    VIEW_ALL_RESULTS,
+    VIEW_CLASS_RESULTS,
+    GENERATE_REPORT_CARDS,
     // Finance
-    CREATE_INVOICE, EDIT_INVOICE, VOID_INVOICE, RECORD_PAYMENT, VIEW_FINANCE_REPORTS, MANAGE_FEE_STRUCTURE,
+    CREATE_INVOICE,
+    EDIT_INVOICE,
+    VOID_INVOICE,
+    RECORD_PAYMENT,
+    VIEW_FINANCE_REPORTS,
+    MANAGE_FEE_STRUCTURE,
     // Boarding
-    MANAGE_HOSTELS, ASSIGN_BEDS, MANAGE_VISITORS, MANAGE_SICK_BAY, DISBURSE_POCKET_MONEY,
+    MANAGE_HOSTELS,
+    ASSIGN_BEDS,
+    MANAGE_VISITORS,
+    MANAGE_SICK_BAY,
+    DISBURSE_POCKET_MONEY,
     // Transport
-    MANAGE_ROUTES, MANAGE_VEHICLES, VIEW_LIVE_GPS,
+    MANAGE_ROUTES,
+    MANAGE_VEHICLES,
+    VIEW_LIVE_GPS,
     // Library
-    MANAGE_LIBRARY_CATALOG, ISSUE_BOOKS, RETURN_BOOKS,
+    MANAGE_LIBRARY_CATALOG,
+    ISSUE_BOOKS,
+    RETURN_BOOKS,
     // LMS
-    CREATE_COURSE, MANAGE_COURSE_CONTENT, VIEW_LMS_ANALYTICS,
+    CREATE_COURSE,
+    MANAGE_COURSE_CONTENT,
+    VIEW_LMS_ANALYTICS,
     // Notifications
-    SEND_BULK_SMS, SEND_CLASS_SMS, SEND_FEE_REMINDERS,
+    SEND_BULK_SMS,
+    SEND_CLASS_SMS,
+    SEND_FEE_REMINDERS,
     // Settings
-    MANAGE_SCHOOL_SETTINGS, MANAGE_FEATURE_FLAGS, MANAGE_USERS,
+    MANAGE_SCHOOL_SETTINGS,
+    MANAGE_FEATURE_FLAGS,
+    MANAGE_USERS,
     // Platform
-    MANAGE_ALL_SCHOOLS, VIEW_PLATFORM_ANALYTICS,
+    MANAGE_ALL_SCHOOLS,
+    VIEW_PLATFORM_ANALYTICS,
     // Reporting
-    EXPORT_MOE_RETURNS, VIEW_SCHOOL_ANALYTICS,
+    EXPORT_MOE_RETURNS,
+    VIEW_SCHOOL_ANALYTICS,
   }
   ```
 - [ ] `src/lib/roles/matrix.ts` — `ROLE_PERMISSIONS: Record<Role, Permission[]>` object mapping each role to its allowed permissions
@@ -1748,9 +1874,11 @@ Define the complete list of permissions in the system and map each role to its a
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Client-side permission utilities that components use to show/hide UI elements based on the current user's permissions.
 
 #### Acceptance Criteria
+
 - [ ] `src/hooks/usePermission.ts`:
   - `usePermission(permission: Permission): boolean` — single permission check
   - `usePermissions(permissions: Permission[]): Record<Permission, boolean>` — batch check
@@ -1768,9 +1896,11 @@ Client-side permission utilities that components use to show/hide UI elements ba
 **Type:** Backend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Every Convex mutation and query that is not public must enforce role requirements at the function level. This is the backstop that prevents API-level attacks even if the frontend is bypassed.
 
 #### Acceptance Criteria
+
 - [ ] `convex/_lib/permissions.ts` finalized with all guard functions:
   - `requireRole(ctx, roles: Role[])` — throws if user's role not in array
   - `requirePermission(ctx, permission: Permission)` — uses the same Role-Permission matrix
@@ -1786,12 +1916,15 @@ Every Convex mutation and query that is not public must enforce role requirement
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 School admins need to create and manage user accounts (teachers, bursars, matrons, etc.) for their school. This page is essential before any staff member can log in.
 
 #### User Story
+
 > As a school admin, I add a new teacher: I enter their name, phone number, and role. The system creates their account and sends them an SMS with a temporary login code. The teacher uses that code to set their password.
 
 #### Acceptance Criteria
+
 - [ ] Page at `/(admin)/settings/users` — lists all non-student users for the school
 - [ ] "Add User" form: First Name, Last Name, Phone, Email (optional), Role dropdown (shows only school-level roles)
 - [ ] On create:
@@ -1810,12 +1943,15 @@ School admins need to create and manage user accounts (teachers, bursars, matron
 **Type:** Backend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 A guardian can have children in different schools on the EduZambia platform (e.g., one child at Kabulonga, another at Chilenje Primary). Their single phone number login must show them all their children's data across schools.
 
 #### User Story
+
 > As a parent with one child at Kabulonga Boys and another at Chilenje Primary, I log in with my phone number and see both children. I can switch between them. Fees for both schools are shown on my dashboard.
 
 #### Acceptance Criteria
+
 - [ ] `convex/users/queries.getMe` returns `guardianProfiles: Array<{ schoolId, guardianId, children: Student[] }>` — one entry per school
 - [ ] Parent portal's multi-child switcher shows children grouped by school if cross-school
 - [ ] Each school context is resolved independently — no data leaks across schools
@@ -1835,12 +1971,15 @@ A guardian can have children in different schools on the EduZambia platform (e.g
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 1.5 days
 
 #### Description
+
 Build the complete admin portal shell: sidebar navigation, topbar, and content area. This is the frame that wraps every admin page from Sprint 01 onwards.
 
 #### User Story
+
 > As an admin, every page I visit has a consistent sidebar showing my school's logo, my name and role, and navigation items appropriate for my school type and my role.
 
 #### Acceptance Criteria
+
 - [ ] `/(admin)/layout.tsx` renders: `<AdminSidebar />` + `<Topbar />` + `{children}`
 - [ ] `AdminSidebar.tsx`:
   - School logo at top (from `useSchool().branding`)
@@ -1866,9 +2005,11 @@ Build the complete admin portal shell: sidebar navigation, topbar, and content a
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 0.5 days
 
 #### Description
+
 Build the teacher portal shell — slimmer than the admin shell, focused on the teacher's daily tasks.
 
 #### Acceptance Criteria
+
 - [ ] `/(teacher)/layout.tsx` with `TeacherSidebar` — slim, icon + label
 - [ ] Nav items: Dashboard, My Register, My Marks, Timetable, LMS (if enabled), Messages
 - [ ] Topbar shows: "Good morning, [FirstName]" greeting, today's date, notification bell
@@ -1882,9 +2023,11 @@ Build the teacher portal shell — slimmer than the admin shell, focused on the 
 **Type:** Frontend | **Priority:** P0 | **Estimate:** 1 day
 
 #### Description
+
 The parent portal is mobile-first and must work well on a basic Android phone with Airtel data. It is built for speed and simplicity — not feature density.
 
 #### Acceptance Criteria
+
 - [ ] `/(parent)/layout.tsx` — mobile-first, bottom tab bar navigation
 - [ ] `ParentShell.tsx`:
   - Top: school logo + child name/grade (if single child) or child switcher (if multiple)
@@ -1903,9 +2046,11 @@ The parent portal is mobile-first and must work well on a basic Android phone wi
 **Type:** Frontend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 Build placeholder dashboard pages for each portal that will be progressively filled with widgets in future sprints. The dashboard must be role-aware and display only relevant summary widgets.
 
 #### Acceptance Criteria
+
 - [ ] `/(admin)/dashboard/page.tsx`:
   - `WelcomeWidget`: "Good morning, [Name]. Here's today's overview."
   - `QuickStatsRow`: Total students (from Convex query), Staff count, Today's attendance % (placeholder "–" until Sprint 01), Outstanding fees (placeholder until Sprint 02)
@@ -1930,9 +2075,11 @@ Build placeholder dashboard pages for each portal that will be progressively fil
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 1 day
 
 #### Description
+
 An in-app notification system that shows all notifications sent to the current user. This uses the `notifications` table defined in the schema and is functional from day one — even before SMS is integrated.
 
 #### Acceptance Criteria
+
 - [ ] Notification bell in topbar shows unread count (real-time via Convex `useQuery`)
 - [ ] Clicking bell opens a popover/sheet with last 20 notifications
 - [ ] `/(admin)/notifications/page.tsx` — full notifications page with pagination
@@ -1957,12 +2104,15 @@ An in-app notification system that shows all notifications sent to the current u
 **Type:** Frontend + Backend | **Priority:** P1 | **Estimate:** 1.5 days
 
 #### Description
+
 When a school admin logs in for the first time (or when `school.status === 'trial'` and setup is incomplete), they are shown a step-by-step setup wizard. Completing this wizard configures the core school settings needed for Sprint 01 features.
 
 #### User Story
+
 > As a newly onboarded school admin at Munali Boys, I log in for the first time and a friendly wizard guides me through: school branding → academic year setup → grades → my first class section. By the end, the system is ready for teachers to start marking attendance.
 
 #### Acceptance Criteria
+
 - [ ] Wizard page at `/(admin)/onboarding` — redirected here on first login if `school.onboardingComplete !== true`
 - [ ] 5 steps with progress indicator:
 
@@ -2003,9 +2153,11 @@ When a school admin logs in for the first time (or when `school.status === 'tria
 **Type:** Frontend | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Description
+
 When a teacher or parent logs in for the first time (using their temporary PIN or after phone verification), they are prompted to complete their profile and change their password/set preferences.
 
 #### Acceptance Criteria
+
 - [ ] After successful first login:
   - If `user.isFirstLogin === true` → redirect to `/profile/setup`
   - Otherwise → redirect to role dashboard
@@ -2028,6 +2180,7 @@ When a teacher or parent logs in for the first time (using their temporary PIN o
 **Type:** Dev | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Acceptance Criteria
+
 - [ ] Vitest configured with `@testing-library/react` for component tests
 - [ ] `convex/tests/` directory created for Convex function unit tests using `convex-test` package
 - [ ] Test scripts: `npm run test` (watch mode), `npm run test:ci` (single run, for CI)
@@ -2043,6 +2196,7 @@ When a teacher or parent logs in for the first time (using their temporary PIN o
 **Type:** Docs | **Priority:** P1 | **Estimate:** 0.5 days
 
 #### Acceptance Criteria
+
 - [ ] `README.md` complete with:
   - System overview (1 paragraph)
   - Prerequisites (Node 20+, npm 9+)
@@ -2194,5 +2348,5 @@ Before Sprint 01 (Core Academic Foundation) begins, verify:
 
 ---
 
-*EduZambia Development Guide — Sprint 00 — Infrastructure & Authentication*
-*Last updated: 2025 | Next Sprint: Sprint 01 — Core Academic Foundation*
+_EduZambia Development Guide — Sprint 00 — Infrastructure & Authentication_
+_Last updated: 2025 | Next Sprint: Sprint 01 — Core Academic Foundation_
