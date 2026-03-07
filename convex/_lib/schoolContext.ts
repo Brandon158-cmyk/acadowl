@@ -1,6 +1,7 @@
-import { QueryCtx, MutationCtx } from '../_generated/server';
+import { QueryCtx, MutationCtx, ActionCtx } from '../_generated/server';
 import { Doc, Id } from '../_generated/dataModel';
 import { EduError, throwEduError } from './errors';
+import { api } from '../_generated/api';
 
 /**
  * Internal helper to resolve a user record with multi-stage fallbacks.
@@ -43,67 +44,36 @@ export async function resolveUser(
 
 /**
  * Extract and validate the authenticated user and their school from the auth context.
- *
- * This is the primary auth utility — called at the top of every school-scoped function.
- *
- * @returns The authenticated user document and their school document
- * @throws UNAUTHENTICATED if no auth identity
- * @throws ACCOUNT_INACTIVE if user is deactivated
- * @throws SCHOOL_NOT_FOUND if school doesn't exist
  */
 export async function getAuthenticatedUserAndSchool(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
 ): Promise<{ user: Doc<'users'>; school: Doc<'schools'> }> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throwEduError(EduError.UNAUTHENTICATED);
+  if ('db' in ctx) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throwEduError(EduError.UNAUTHENTICATED);
+
+    const user = await resolveUser(ctx, identity!);
+    if (!user) throwEduError(EduError.UNAUTHENTICATED, 'User not found.');
+    if (user.isActive === false) throwEduError(EduError.ACCOUNT_INACTIVE);
+    if (!user.schoolId) throwEduError(EduError.SCHOOL_NOT_FOUND);
+
+    const school = await ctx.db.get(user.schoolId);
+    if (!school) throwEduError(EduError.SCHOOL_NOT_FOUND);
+    if (school.status === 'suspended') throwEduError(EduError.SCHOOL_SUSPENDED);
+
+    return { user, school };
+  } else {
+    // Action context
+    const data = await ctx.runQuery(api.users.queries.getMe);
+    if (!data || !data.user || !data.school) {
+      throwEduError(EduError.UNAUTHENTICATED, 'User or school context not found.');
+    }
+    return { user: data.user as Doc<'users'>, school: data.school as Doc<'schools'> };
   }
-
-  // Use robust resolution
-  const user = await resolveUser(ctx, identity!);
-
-  if (!user) {
-    throwEduError(EduError.UNAUTHENTICATED, 'User not found. Please log in again.');
-  }
-
-  if (user.isActive === false) {
-    throwEduError(EduError.ACCOUNT_INACTIVE);
-  }
-
-  if (!user.schoolId) {
-    // Platform admin — no school context needed
-    throwEduError(EduError.SCHOOL_NOT_FOUND, 'No school associated with this account.');
-  }
-
-  const school = await ctx.db.get(user.schoolId);
-  if (!school) {
-    throwEduError(EduError.SCHOOL_NOT_FOUND);
-  }
-
-  if (school.status === 'suspended') {
-    throwEduError(EduError.SCHOOL_SUSPENDED);
-  }
-
-  return { user, school };
 }
 
 /**
  * Pattern: every school-scoped query/mutation MUST use this.
- *
- * Wraps the function with automatic auth + school validation.
- *
- * @example
- * ```ts
- * export const getStudents = query({
- *   handler: async (ctx) => {
- *     return withSchoolScope(ctx, async ({ ctx, user, school, schoolId }) => {
- *       return ctx.db.query('students')
- *         .withIndex('by_school', q => q.eq('schoolId', schoolId))
- *         .collect();
- *     });
- *   },
- * });
- * ```
  */
 export async function withSchoolScope<T>(
   ctx: QueryCtx | MutationCtx,
@@ -122,31 +92,29 @@ export async function withSchoolScope<T>(
  * Get an authenticated user without requiring school context.
  * Used for platform admin operations.
  */
-export async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'>> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throwEduError(EduError.UNAUTHENTICATED);
+export async function getAuthenticatedUser(
+  ctx: QueryCtx | MutationCtx | ActionCtx,
+): Promise<Doc<'users'>> {
+  if ('db' in ctx) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throwEduError(EduError.UNAUTHENTICATED);
+    const user = await resolveUser(ctx, identity!);
+    if (!user) throwEduError(EduError.UNAUTHENTICATED, 'User not found.');
+    if (user.isActive === false) throwEduError(EduError.ACCOUNT_INACTIVE);
+    return user;
+  } else {
+    const data = await ctx.runQuery(api.users.queries.getMe);
+    if (!data || !data.user) throwEduError(EduError.UNAUTHENTICATED, 'User not found.');
+    return data.user as Doc<'users'>;
   }
-
-  // Use robust resolution
-  const user = await resolveUser(ctx, identity!);
-
-  if (!user) {
-    throwEduError(EduError.UNAUTHENTICATED, 'User not found.');
-  }
-
-  if (user.isActive === false) {
-    throwEduError(EduError.ACCOUNT_INACTIVE);
-  }
-
-  return user;
 }
 
 /**
  * Require platform admin role.
- * Used for super admin operations that have no school context.
  */
-export async function requirePlatformAdmin(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'>> {
+export async function requirePlatformAdmin(
+  ctx: QueryCtx | MutationCtx | ActionCtx,
+): Promise<Doc<'users'>> {
   const user = await getAuthenticatedUser(ctx);
   if (user.role !== 'platform_admin') {
     throwEduError(EduError.FORBIDDEN, 'Only platform administrators can perform this action.');

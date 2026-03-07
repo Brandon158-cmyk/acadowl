@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation } from 'convex/react';
+import { useMutation, useAction } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -50,13 +50,14 @@ const formSchema = z.object({
   subscriptionTier: z.enum(['starter', 'standard', 'premium']),
   adminName: z.string().min(2, 'Administrator name is required'),
   adminEmail: z.string().email('Valid administrator email required'),
+  adminPassword: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function CreateSchoolPage() {
   const router = useRouter();
-  const createSchool = useMutation(api.schools.mutations.createSchool);
+  const createSchool = useAction(api.schools.mutations.createSchool);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,6 +67,7 @@ export default function CreateSchoolPage() {
       slug: '',
       adminName: '',
       adminEmail: '',
+      adminPassword: '',
     },
   });
 
@@ -288,6 +290,21 @@ export default function CreateSchoolPage() {
                   {errors.adminEmail && (
                     <p className="text-destructive text-[0.8rem] font-medium">
                       {errors.adminEmail.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="adminPassword">Initial Password</Label>
+                  <Input
+                    id="adminPassword"
+                    type="password"
+                    placeholder="Min 8 characters"
+                    {...register('adminPassword')}
+                  />
+                  {errors.adminPassword && (
+                    <p className="text-destructive text-[0.8rem] font-medium">
+                      {errors.adminPassword.message}
                     </p>
                   )}
                 </div>

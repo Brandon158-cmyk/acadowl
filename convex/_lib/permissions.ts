@@ -1,4 +1,4 @@
-import { QueryCtx, MutationCtx } from '../_generated/server';
+import { QueryCtx, MutationCtx, ActionCtx } from '../_generated/server';
 import { Doc } from '../_generated/dataModel';
 import { getAuthenticatedUserAndSchool, getAuthenticatedUser } from './schoolContext';
 import { EduError, throwEduError } from './errors';
@@ -19,7 +19,7 @@ import { canDo } from '../../src/lib/roles/matrix';
  * @returns The authenticated user and school
  */
 export async function requireRole(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
   allowedRoles: Role[],
 ): Promise<{ user: Doc<'users'>; school: Doc<'schools'> }> {
   const { user, school } = await getAuthenticatedUserAndSchool(ctx);
@@ -39,7 +39,7 @@ export async function requireRole(
  * @returns The authenticated user and school
  */
 export async function requirePermission(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
   permission: Permission,
 ): Promise<{ user: Doc<'users'>; school: Doc<'schools'> }> {
   const { user, school } = await getAuthenticatedUserAndSchool(ctx);
@@ -55,7 +55,7 @@ export async function requirePermission(
  * Shorthand: require school_admin or platform_admin.
  */
 export async function requireSchoolAdmin(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
 ): Promise<{ user: Doc<'users'>; school: Doc<'schools'> }> {
   return requireRole(ctx, ['school_admin', 'platform_admin']);
 }
@@ -63,7 +63,9 @@ export async function requireSchoolAdmin(
 /**
  * Shorthand: require platform_admin only.
  */
-export async function requirePlatformAdmin(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'>> {
+export async function requirePlatformAdmin(
+  ctx: QueryCtx | MutationCtx | ActionCtx,
+): Promise<Doc<'users'>> {
   const user = await getAuthenticatedUser(ctx);
   if (user.role !== 'platform_admin') {
     throwEduError(EduError.FORBIDDEN, 'Platform admin access required.');

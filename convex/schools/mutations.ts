@@ -1,13 +1,16 @@
-import { mutation } from '../_generated/server';
+import { mutation, internalMutation, action } from '../_generated/server';
 import { v } from 'convex/values';
 import { requirePlatformAdmin, requireSchoolAdmin } from '../_lib/permissions';
+import { createAccount } from '@convex-dev/auth/server';
+import { api, internal } from '../_generated/api';
+import { Id } from '../_generated/dataModel';
 
 /**
  * School mutation functions.
  */
 
-/** Create a new school (Platform Admin only) */
-export const createSchool = mutation({
+/** Create a new school (Internal) */
+export const createSchoolInternal = internalMutation({
   args: {
     slug: v.string(),
     name: v.string(),
@@ -31,15 +34,8 @@ export const createSchool = mutation({
     zraTpin: v.string(),
     subscriptionTier: v.union(v.literal('starter'), v.literal('standard'), v.literal('premium')),
     enabledFeatures: v.array(v.string()),
-    // Optional first admin bootstrap
-    adminName: v.optional(v.string()),
-    adminEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requirePlatformAdmin(ctx);
-
-    const { adminName, adminEmail, ...schoolData } = args;
-
     // Check slug uniqueness
     const existing = await ctx.db
       .query('schools')
@@ -52,8 +48,9 @@ export const createSchool = mutation({
 
     const now = Date.now();
 
+    // Insert the school
     const schoolId = await ctx.db.insert('schools', {
-      ...schoolData,
+      ...args,
       gradingMode: args.type === 'college' || args.type === 'technical' ? 'gpa' : 'ecz',
       academicMode: args.type === 'college' || args.type === 'technical' ? 'semester' : 'term',
       branding: {
@@ -70,19 +67,69 @@ export const createSchool = mutation({
       updatedAt: now,
     });
 
-    // Bootstrap first admin if provided
-    if (adminName && adminEmail) {
-      await ctx.db.insert('users', {
-        schoolId,
+    return schoolId;
+  },
+});
+
+/** Public Action: Create School + Admin Account */
+export const createSchool = action({
+  args: {
+    slug: v.string(),
+    name: v.string(),
+    shortName: v.optional(v.string()),
+    type: v.union(
+      v.literal('day_primary'),
+      v.literal('day_secondary'),
+      v.literal('boarding_primary'),
+      v.literal('boarding_secondary'),
+      v.literal('mixed_secondary'),
+      v.literal('college'),
+      v.literal('technical'),
+    ),
+    province: v.string(),
+    district: v.string(),
+    address: v.string(),
+    phone: v.string(),
+    email: v.optional(v.string()),
+    moeCode: v.optional(v.string()),
+    heaCode: v.optional(v.string()),
+    zraTpin: v.string(),
+    subscriptionTier: v.union(v.literal('starter'), v.literal('standard'), v.literal('premium')),
+    enabledFeatures: v.array(v.string()),
+    // Admin setup
+    adminName: v.string(),
+    adminEmail: v.string(),
+    adminPassword: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await requirePlatformAdmin(ctx);
+
+    const { adminName, adminEmail, adminPassword, ...schoolData } = args;
+
+    // 1. Create the school record
+    const schoolId = (await ctx.runMutation(
+      internal.schools.mutations.createSchoolInternal,
+      schoolData,
+    )) as Id<'schools'>;
+
+    // 2. Create the admin account
+    await createAccount(ctx, {
+      provider: 'password',
+      account: {
+        id: adminEmail.toLowerCase(),
+        secret: adminPassword,
+      },
+      profile: {
         name: adminName,
         email: adminEmail.toLowerCase(),
         role: 'school_admin',
+        schoolId,
         isActive: true,
         isFirstLogin: true,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      } as any,
+    });
 
     return schoolId;
   },
