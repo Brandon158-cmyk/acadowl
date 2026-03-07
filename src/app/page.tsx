@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { AuthLander } from '@/components/auth/AuthLander';
 
 export default function Home() {
-  redirect('/dashboard');
+  return <AuthLander />;
 }

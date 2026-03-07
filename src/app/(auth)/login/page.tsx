@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthActions } from '@convex-dev/auth/react';
+import { useConvexAuth } from 'convex/react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,10 +16,19 @@ import { GraduationCap, Loader2 } from 'lucide-react';
  */
 export default function LoginPage() {
   const { signIn } = useAuthActions();
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Automatic redirect if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +37,8 @@ export default function LoginPage() {
 
     try {
       await signIn('password', { email, password, flow: 'signIn' });
+      // Redirect to home which uses AuthLander
+      router.push('/');
     } catch (err) {
       setError('Invalid email or password. Please try again.');
     } finally {

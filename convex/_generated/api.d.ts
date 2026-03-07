@@ -14,6 +14,7 @@ import type * as _lib_permissions from "../_lib/permissions.js";
 import type * as _lib_schoolContext from "../_lib/schoolContext.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as debugAuth from "../debugAuth.js";
 import type * as http from "../http.js";
 import type * as notifications_queries from "../notifications/queries.js";
 import type * as platformAdmin from "../platformAdmin.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   "_lib/schoolContext": typeof _lib_schoolContext;
   auth: typeof auth;
   crons: typeof crons;
+  debugAuth: typeof debugAuth;
   http: typeof http;
   "notifications/queries": typeof notifications_queries;
   platformAdmin: typeof platformAdmin;

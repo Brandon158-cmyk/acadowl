@@ -3,6 +3,45 @@ import { Doc, Id } from '../_generated/dataModel';
 import { EduError, throwEduError } from './errors';
 
 /**
+ * Internal helper to resolve a user record with multi-stage fallbacks.
+ * Matches logic in users/queries:getMe.
+ */
+export async function resolveUser(
+  ctx: QueryCtx | MutationCtx,
+  identity: { tokenIdentifier: string; email?: string | undefined },
+): Promise<Doc<'users'> | null> {
+  // 1. Exact match (Current session)
+  const exactUser = await ctx.db
+    .query('users')
+    .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+    .unique();
+
+  if (exactUser) return exactUser;
+
+  // 2. Session-based match (The most authoritative fallback for Convex Auth)
+  const parts = identity.tokenIdentifier.split('|');
+  if (parts.length >= 3) {
+    const sessionId = parts[2] as Id<'authSessions'>;
+    const session = (await ctx.db.get(sessionId)) as any;
+    if (session && session.userId) {
+      const user = await ctx.db.get(session.userId as Id<'users'>);
+      if (user) return user as Doc<'users'>;
+    }
+  }
+
+  // 3. Email Fallback
+  if (identity.email) {
+    const emailUser = await ctx.db
+      .query('users')
+      .withIndex('email', (q) => q.eq('email', identity.email!))
+      .first();
+    if (emailUser) return emailUser;
+  }
+
+  return null;
+}
+
+/**
  * Extract and validate the authenticated user and their school from the auth context.
  *
  * This is the primary auth utility — called at the top of every school-scoped function.
@@ -20,11 +59,8 @@ export async function getAuthenticatedUserAndSchool(
     throwEduError(EduError.UNAUTHENTICATED);
   }
 
-  // Find user by Convex Auth token
-  const user = await ctx.db
-    .query('users')
-    .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
-    .unique();
+  // Use robust resolution
+  const user = await resolveUser(ctx, identity!);
 
   if (!user) {
     throwEduError(EduError.UNAUTHENTICATED, 'User not found. Please log in again.');
@@ -92,10 +128,8 @@ export async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx): Promise
     throwEduError(EduError.UNAUTHENTICATED);
   }
 
-  const user = await ctx.db
-    .query('users')
-    .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
-    .unique();
+  // Use robust resolution
+  const user = await resolveUser(ctx, identity!);
 
   if (!user) {
     throwEduError(EduError.UNAUTHENTICATED, 'User not found.');

@@ -1,6 +1,6 @@
 import { mutation } from './_generated/server';
-import { v } from 'convex/values';
-import { ConvexError } from 'convex/values';
+import { v, ConvexError } from 'convex/values';
+import { Doc, Id } from './_generated/dataModel';
 
 /**
  * SECURE ELEVATION for Platform Admins.
@@ -19,45 +19,54 @@ export const elevateMyAccount = mutation({
       throw new ConvexError('Invalid platform registration secret.');
     }
 
-    // 2. Identify User to Elevate
-    let user = await ctx.db
-      .query('users')
-      .withIndex('email', (q) => q.eq('email', args.email))
-      .first();
-
-    // Fallback: search by tokenIdentifier if email lookup fails
-    if (!user) {
-      const identity = await ctx.auth.getUserIdentity();
-      if (identity) {
-        user = await ctx.db
-          .query('users')
-          .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
-          .unique();
-      }
+    // 2. Identify the Authenticated Identity
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('State error: Not authenticated. Please sign up first.');
     }
 
-    if (!user) {
+    const currentUserId = identity.subject as Id<'users'>;
+    const currentUser = (await ctx.db.get(currentUserId)) as Doc<'users'> | null;
+
+    if (!currentUser) {
       throw new ConvexError(
-        `User record for ${args.email} not found. Please ensure sign-up succeeded.`,
+        'Critical Error: Authenticated user record not found. Please try signing out and in again.',
       );
     }
 
-    const identity = await ctx.auth.getUserIdentity();
-    const tokenIdentifier = identity?.tokenIdentifier;
-
     console.info(
-      `[elevateMyAccount] Elevating ${user.email} (${user._id}) to platform_admin. Token: ${tokenIdentifier}`,
+      `[elevateMyAccount] Elevating current session user: ${currentUser.email} (${currentUserId})`,
     );
 
-    // 3. Elevate
-    await ctx.db.patch(user._id, {
+    // 3. Handle Identity Merging (Find any legacy users with the same email)
+    const targetEmail = args.email.toLowerCase();
+    const otherUsers = (await ctx.db
+      .query('users')
+      .withIndex('email', (q) => q.eq('email', targetEmail))
+      .collect()) as Doc<'users'>[];
+
+    // Mark all matching email records (including current and legacy) as admins
+    for (const u of otherUsers) {
+      console.info(`[elevateMyAccount] Patching role for record: ${u._id}`);
+      await ctx.db.patch(u._id, {
+        role: 'platform_admin',
+        isActive: true,
+        tokenIdentifier: identity.tokenIdentifier,
+        email: targetEmail, // Ensure email is correctly case-normalized
+        updatedAt: Date.now(),
+      });
+    }
+
+    // Double check that the current session identity itself is now elevated
+    await ctx.db.patch(currentUserId, {
       role: 'platform_admin',
       isActive: true,
-      tokenIdentifier: tokenIdentifier,
+      tokenIdentifier: identity.tokenIdentifier,
+      email: targetEmail,
       updatedAt: Date.now(),
     });
 
-    const refreshed = await ctx.db.get(user._id);
+    const refreshed = await ctx.db.get(currentUserId);
 
     return {
       success: true,

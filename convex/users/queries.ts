@@ -1,6 +1,7 @@
 import { query } from '../_generated/server';
 import { requireSchoolAdmin } from '../_lib/permissions';
-import { Doc } from '../_generated/dataModel';
+import { Doc, Id } from '../_generated/dataModel';
+import { resolveUser } from '../_lib/schoolContext';
 
 /**
  * User query functions.
@@ -13,21 +14,13 @@ export const getMe = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
-    // Primary lookup: search by tokenIdentifier
-    let user = (await ctx.db
-      .query('users')
-      .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
-      .unique()) as Doc<'users'> | null;
-
-    // Fallback 1: Search by email from identity
-    if (!user && identity.email) {
-      user = (await ctx.db
-        .query('users')
-        .withIndex('email', (q) => q.eq('email', identity.email))
-        .first()) as Doc<'users'> | null;
-    }
+    // Use shared robust resolution
+    const user = await resolveUser(ctx, identity);
 
     if (!user) return null;
+
+    // Auto-patch tokenIdentifier if missing but user found by email/session
+    // (Queries can't patch, but we note it for next mutation)
 
     // Fetch linked profile
     let staffProfile = null;
@@ -84,7 +77,26 @@ export const getMe = query({
     }
 
     return {
-      user,
+      user: {
+        ...user,
+      },
+      debug: {
+        identityEmail: identity.email,
+        identitySubject: identity.subject,
+        identityToken: identity.tokenIdentifier,
+        foundBy:
+          user._id ===
+          (
+            await ctx.db
+              .query('users')
+              .withIndex('tokenIdentifier', (q) =>
+                q.eq('tokenIdentifier', identity.tokenIdentifier),
+              )
+              .unique()
+          )?._id
+            ? 'token'
+            : 'email',
+      },
       staff: staffProfile,
       guardian: guardianProfile,
       guardianProfiles,

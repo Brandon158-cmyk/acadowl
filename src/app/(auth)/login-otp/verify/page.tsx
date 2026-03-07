@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuthActions } from '@convex-dev/auth/react';
+import { useConvexAuth } from 'convex/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 function VerifyOtpView() {
   const { signIn } = useAuthActions();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const phone = searchParams.get('phone') || '';
@@ -20,6 +22,13 @@ function VerifyOtpView() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Automatic redirect if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -27,7 +36,7 @@ function VerifyOtpView() {
 
     try {
       await signIn('twilio', { phone, code });
-      router.push('/dashboard');
+      router.push('/');
     } catch (err) {
       setError('Invalid code. Please try again.');
     } finally {
