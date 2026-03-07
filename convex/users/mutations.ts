@@ -18,7 +18,7 @@ export const resolveUserProfile = mutation({
 
     const user = await ctx.db
       .query('users')
-      .withIndex('by_token', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
       .unique();
 
     if (!user) return null;
@@ -108,7 +108,7 @@ export const createUser = mutation({
     if (args.email) {
       const existing = await ctx.db
         .query('users')
-        .withIndex('by_email', (q) => q.eq('email', args.email!))
+        .withIndex('email', (q) => q.eq('email', args.email!))
         .first();
       if (existing && existing.schoolId === school._id) {
         throwEduError(EduError.ALREADY_EXISTS, 'A user with this email already exists.');

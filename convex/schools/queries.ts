@@ -1,5 +1,6 @@
 import { query } from '../_generated/server';
 import { v } from 'convex/values';
+import { requirePlatformAdmin } from '../_lib/permissions';
 
 /**
  * School query functions.
@@ -28,8 +29,6 @@ export const getSchoolById = query({
 export const getAllSchools = query({
   args: {},
   handler: async (ctx) => {
-    // Import dynamically or ensure we import at the top
-    const { requirePlatformAdmin } = await import('../_lib/permissions');
     await requirePlatformAdmin(ctx);
     return ctx.db.query('schools').order('desc').collect();
   },

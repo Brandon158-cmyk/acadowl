@@ -1,5 +1,6 @@
 import { query } from '../_generated/server';
 import { requireSchoolAdmin } from '../_lib/permissions';
+import { Doc } from '../_generated/dataModel';
 
 /**
  * User query functions.
@@ -12,10 +13,19 @@ export const getMe = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
-    const user = await ctx.db
+    // Primary lookup: search by tokenIdentifier
+    let user = (await ctx.db
       .query('users')
-      .withIndex('by_token', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
-      .unique();
+      .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .unique()) as Doc<'users'> | null;
+
+    // Fallback 1: Search by email from identity
+    if (!user && identity.email) {
+      user = (await ctx.db
+        .query('users')
+        .withIndex('email', (q) => q.eq('email', identity.email))
+        .first()) as Doc<'users'> | null;
+    }
 
     if (!user) return null;
 

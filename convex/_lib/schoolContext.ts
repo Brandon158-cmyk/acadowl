@@ -23,7 +23,7 @@ export async function getAuthenticatedUserAndSchool(
   // Find user by Convex Auth token
   const user = await ctx.db
     .query('users')
-    .withIndex('by_token', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+    .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
     .unique();
 
   if (!user) {
@@ -94,7 +94,7 @@ export async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx): Promise
 
   const user = await ctx.db
     .query('users')
-    .withIndex('by_token', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+    .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
     .unique();
 
   if (!user) {

@@ -16,6 +16,7 @@ import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as notifications_queries from "../notifications/queries.js";
+import type * as platformAdmin from "../platformAdmin.js";
 import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
 import type * as seed from "../seed.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   http: typeof http;
   "notifications/queries": typeof notifications_queries;
+  platformAdmin: typeof platformAdmin;
   "schools/mutations": typeof schools_mutations;
   "schools/queries": typeof schools_queries;
   seed: typeof seed;

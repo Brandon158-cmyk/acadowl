@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { extractSlugFromHost, isPlatformDomain } from '@/lib/utils/schoolSlug';
+import { convexAuthNextjsMiddleware } from '@convex-dev/auth/nextjs/server';
 
 /**
  * Next.js Middleware
@@ -10,22 +11,11 @@ import { extractSlugFromHost, isPlatformDomain } from '@/lib/utils/schoolSlug';
  * 2. Handle platform admin subdomain separately
  * 3. Redirect to www if no slug found on non-public paths
  */
-export function middleware(request: NextRequest) {
+export default convexAuthNextjsMiddleware((request: NextRequest) => {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') ?? '';
 
-  // Allow static assets, API routes, and _next internal routes
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/icons') ||
-    pathname === '/manifest.json' ||
-    pathname === '/favicon.ico'
-  ) {
-    return NextResponse.next();
-  }
-
-  // Platform admin subdomain — don't resolve a school
+  // platform subdomain
   if (isPlatformDomain(host)) {
     const headers = new Headers(request.headers);
     headers.set('x-school-slug', '__platform__');
@@ -34,15 +24,12 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  // Try to extract school slug from hostname
+  // extract slug
   let schoolSlug = extractSlugFromHost(host);
-
-  // Fallback: check query param ?school=kabulonga
   if (!schoolSlug) {
     schoolSlug = request.nextUrl.searchParams.get('school');
   }
 
-  // If we have a slug, inject it into headers
   if (schoolSlug) {
     const headers = new Headers(request.headers);
     headers.set('x-school-slug', schoolSlug);
@@ -51,22 +38,26 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  // No slug found — if not on public path, redirect to main site
-  const PUBLIC_PATHS = ['/', '/onboard', '/login', '/register'];
+  // public paths
+  const PUBLIC_PATHS = [
+    '/',
+    '/onboard',
+    '/login',
+    '/register',
+    '/seed-admin',
+    '/platform-register',
+  ];
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 
   if (!isPublicPath) {
-    // In development, just continue (no redirect to avoid breaking dev)
     if (process.env.NODE_ENV === 'development') {
       return NextResponse.next();
     }
-
-    // Production: redirect to www
     return NextResponse.redirect(new URL('https://www.eduzambia.zm'));
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [

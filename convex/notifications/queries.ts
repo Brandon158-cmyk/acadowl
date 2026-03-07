@@ -17,7 +17,7 @@ export const getMyNotifications = query({
 
     const user = await ctx.db
       .query('users')
-      .withIndex('by_token', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
       .unique();
 
     if (!user) return [];
@@ -39,7 +39,7 @@ export const getUnreadCount = query({
 
     const user = await ctx.db
       .query('users')
-      .withIndex('by_token', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
       .unique();
 
     if (!user) return 0;
@@ -70,7 +70,7 @@ export const markAllAsRead = mutation({
 
     const user = await ctx.db
       .query('users')
-      .withIndex('by_token', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .withIndex('tokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
       .unique();
 
     if (!user) return;

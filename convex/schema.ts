@@ -223,10 +223,10 @@ const schema = defineSchema({
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_token', ['tokenIdentifier'])
+    .index('tokenIdentifier', ['tokenIdentifier'])
     .index('by_school', ['schoolId'])
-    .index('by_email', ['email'])
-    .index('by_phone', ['phone'])
+    .index('email', ['email'])
+    .index('phone', ['phone'])
     .index('by_role', ['schoolId', 'role']),
 
   /** Professional profile for teachers and all school employees */
@@ -866,18 +866,24 @@ const schema = defineSchema({
     emailVerified: v.optional(v.string()),
     phoneVerified: v.optional(v.string()),
   })
-    .index('by_provider_account', ['provider', 'providerAccountId'])
-    .index('by_user', ['userId']),
+    .index('userIdAndProvider', ['userId', 'provider'])
+    .index('accountIdAndProvider', ['providerAccountId', 'provider'])
+    .index('providerAndAccountId', ['provider', 'providerAccountId'])
+    .index('userId', ['userId']),
 
   authSessions: defineTable({
     userId: v.id('users'),
     expirationTime: v.number(),
-  }).index('by_user', ['userId']),
+  }).index('userId', ['userId']),
 
   authRefreshTokens: defineTable({
     sessionId: v.id('authSessions'),
     expirationTime: v.number(),
-  }).index('by_session', ['sessionId']),
+    firstUsedTime: v.optional(v.number()),
+    parentRefreshTokenId: v.optional(v.id('authRefreshTokens')),
+  })
+    .index('sessionId', ['sessionId'])
+    .index('sessionIdAndParentRefreshTokenId', ['sessionId', 'parentRefreshTokenId']),
 
   authVerificationCodes: defineTable({
     accountId: v.id('authAccounts'),
@@ -887,14 +893,14 @@ const schema = defineSchema({
     emailVerified: v.optional(v.string()),
     phoneVerified: v.optional(v.string()),
   })
-    .index('by_account', ['accountId'])
-    .index('by_code', ['code']),
+    .index('accountId', ['accountId'])
+    .index('code', ['code']),
 
   authRateLimits: defineTable({
     identifier: v.string(),
     lastAttemptTime: v.number(),
     attemptsCount: v.number(),
-  }).index('by_identifier', ['identifier']),
+  }).index('identifier', ['identifier']),
 });
 
 export default schema;
