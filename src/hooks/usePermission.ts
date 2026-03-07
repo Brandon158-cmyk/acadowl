@@ -1,7 +1,9 @@
 'use client';
 
 import { Permission } from '@/lib/roles/types';
-import { canDo } from '@/lib/roles/matrix';
+import { Role } from '@/lib/roles/types';
+import { canDo, canDoAny } from '@/lib/roles/matrix';
+import { useMe } from '@/hooks/useMe';
 
 /**
  * ISSUE-028 · Permission Hooks
@@ -12,26 +14,22 @@ import { canDo } from '@/lib/roles/matrix';
 
 /**
  * Check a single permission for the current user.
- *
- * @example
- * const canMarkAttendance = usePermission(Permission.MARK_ATTENDANCE);
  */
 export function usePermission(permission: Permission): boolean {
-  // TODO: Connect to useMe() once the hook is built
-  return false;
+  const me = useMe();
+  if (!me?.user?.role) return false;
+  return canDo(me.user.role as Role, permission);
 }
 
 /**
  * Batch check multiple permissions.
- *
- * @example
- * const perms = usePermissions([Permission.MARK_ATTENDANCE, Permission.VIEW_STUDENTS]);
- * if (perms[Permission.MARK_ATTENDANCE]) { ... }
  */
 export function usePermissions(permissions: Permission[]): Record<string, boolean> {
+  const me = useMe();
+  const role = me?.user?.role as Role | undefined;
   const result: Record<string, boolean> = {};
   for (const p of permissions) {
-    result[p] = false; // TODO: Connect to useMe()
+    result[p] = role ? canDo(role, p) : false;
   }
   return result;
 }
@@ -40,5 +38,7 @@ export function usePermissions(permissions: Permission[]): Record<string, boolea
  * Check if the user has any of the given permissions.
  */
 export function useHasAnyPermission(permissions: Permission[]): boolean {
-  return permissions.some((p) => usePermission(p));
+  const me = useMe();
+  if (!me?.user?.role) return false;
+  return canDoAny(me.user.role as Role, permissions);
 }

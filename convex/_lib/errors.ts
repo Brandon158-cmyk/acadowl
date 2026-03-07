@@ -1,3 +1,5 @@
+import { ConvexError } from 'convex/values';
+
 /**
  * Standardized error class for EduZambia.
  * Used across all Convex functions to throw consistent, typed errors.
@@ -57,7 +59,7 @@ const ERROR_MESSAGES: Record<EduErrorCode, string> = {
  * @param customMessage - Optional override of the default message
  */
 export function throwEduError(code: EduErrorCode, customMessage?: string): never {
-  throw new Error(customMessage ?? ERROR_MESSAGES[code]);
+  throw new ConvexError(customMessage ?? ERROR_MESSAGES[code]);
 }
 
 /**

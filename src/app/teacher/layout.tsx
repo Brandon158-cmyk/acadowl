@@ -1,18 +1,18 @@
 /**
- * Admin layout — sidebar + topbar shell.
- * ISSUE-032 · Admin Portal Shell
+ * Teacher layout — slim sidebar shell.
+ * ISSUE-033 · Teacher Portal Shell
  */
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { AdminSidebar } from '@/components/layout/AdminSidebar';
+import { TeacherSidebar } from '@/components/layout/TeacherSidebar';
 import { Topbar } from '@/components/layout/Topbar';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <div className="flex min-h-screen">
         {/* Sidebar — hidden on mobile, shown on md+ */}
         <div className="hidden md:flex">
-          <AdminSidebar />
+          <TeacherSidebar />
         </div>
         <div className="flex flex-1 flex-col">
           <Topbar />

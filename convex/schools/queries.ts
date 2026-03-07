@@ -23,3 +23,14 @@ export const getSchoolById = query({
     return ctx.db.get(schoolId);
   },
 });
+
+/** Get all schools (Platform Admin only) */
+export const getAllSchools = query({
+  args: {},
+  handler: async (ctx) => {
+    // Import dynamically or ensure we import at the top
+    const { requirePlatformAdmin } = await import('../_lib/permissions');
+    await requirePlatformAdmin(ctx);
+    return ctx.db.query('schools').order('desc').collect();
+  },
+});
