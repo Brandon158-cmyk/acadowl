@@ -37,6 +37,18 @@ export const createPlan = mutation({
       throwEduError(EduError.FORBIDDEN, 'Only teaching staff can create lesson plans.');
     }
 
+    // Verify subjectId belongs to caller's school
+    const subject = await ctx.db.get(args.subjectId);
+    if (!subject || subject.schoolId !== school._id) {
+      throwEduError(EduError.FORBIDDEN, 'Subject does not belong to your school.');
+    }
+
+    // Verify gradeId belongs to caller's school
+    const grade = await ctx.db.get(args.gradeId);
+    if (!grade || grade.schoolId !== school._id) {
+      throwEduError(EduError.FORBIDDEN, 'Grade does not belong to your school.');
+    }
+
     return await ctx.db.insert('lessonPlans', {
       schoolId: school._id,
       staffId: staff._id,
@@ -156,11 +168,23 @@ export const generateUploadUrl = mutation({
 export const getStorageUrls = query({
   args: { storageIds: v.array(v.id('_storage')) },
   handler: async (ctx, args) => {
-    // Only authenticated users can get these URLs for now
-    await getAuthenticatedUserAndSchool(ctx);
+    const { school } = await getAuthenticatedUserAndSchool(ctx);
+
+    // Build a set of storage IDs that are referenced by lesson plans owned by this school
+    const ownedStorageIds = new Set<string>();
+    const plans = await ctx.db
+      .query('lessonPlans')
+      .withIndex('by_school', (q) => q.eq('schoolId', school._id))
+      .collect();
+    for (const plan of plans) {
+      for (const resource of plan.resources) {
+        if (resource.storageId) ownedStorageIds.add(resource.storageId);
+      }
+    }
 
     const urls = await Promise.all(
       args.storageIds.map(async (id) => {
+        if (!ownedStorageIds.has(id)) return { storageId: id, url: null };
         const url = await ctx.storage.getUrl(id);
         return { storageId: id, url };
       }),
@@ -199,15 +223,14 @@ export const getPlansBySubject = query({
       .filter((q) => q.eq(q.field('schoolId'), school._id))
       .collect();
 
-    // Filter visibility
+    // Filter visibility — mirror getPlanById draft protections
     return plans.filter((p) => {
-      // If it's your plan, see it always
-      if (staff && p.staffId === staff._id) return true;
-      // If visibility is school, see it
-      if (p.visibility === 'school') return true;
-      // If admin and visibility is school (already handled). Admins can also see private? Let's say yes for moderation
-      if (user.role === 'school_admin' || user.role === 'platform_admin') return true;
-      return false;
+      const isOwner = staff && p.staffId === staff._id;
+      const isAdmin = user.role === 'school_admin' || user.role === 'platform_admin';
+      // Owners and admins see everything
+      if (isOwner || isAdmin) return true;
+      // Non-owners can only see school-visible published plans
+      return p.visibility === 'school' && p.status !== 'draft';
     });
   },
 });

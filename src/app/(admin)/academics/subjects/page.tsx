@@ -64,6 +64,7 @@ export default function SubjectsPage() {
 
   const handleCreate = async () => {
     if (!newSubject.name) return toast.error('Subject name is required');
+    if (newSubject.gradeIds.length === 0) return toast.error('Select at least one grade');
     try {
       await createSubject({
         name: newSubject.name,

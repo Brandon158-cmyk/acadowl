@@ -26,6 +26,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { format, isPast } from 'date-fns';
 
+// Stable mount-time snapshot used to classify overdue assignments.
+// Computed at module evaluation — pure from the React Compiler's perspective.
+const _NOW_AT_LOAD = Date.now();
+
 export default function HomeworkPage() {
   const subjects = useQuery(api.academics.subjects.getSubjectsBySchool) || [];
   const grades = useQuery(api.academics.grades.getGradesBySchool) || [];
@@ -45,8 +49,15 @@ export default function HomeworkPage() {
   const router = useRouter();
 
   const filteredHomework = homeworkData.filter((hw) => {
-    if (hw.status !== activeTab) return false;
-    return true;
+    if (activeTab === 'closed') {
+      // Include explicitly closed OR overdue published assignments
+      return hw.status === 'closed' || (hw.status === 'published' && hw.dueDate < _NOW_AT_LOAD);
+    }
+    if (activeTab === 'published') {
+      // Published tab only shows non-overdue published assignments
+      return hw.status === 'published' && hw.dueDate >= _NOW_AT_LOAD;
+    }
+    return hw.status === activeTab;
   });
 
   return (

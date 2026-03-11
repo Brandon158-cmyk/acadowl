@@ -29,6 +29,14 @@ export const createSubject = mutation({
       }
     }
 
+    // Validate all gradeIds belong to this school
+    for (const gradeId of args.gradeIds) {
+      const grade = await ctx.db.get(gradeId);
+      if (!grade || grade.schoolId !== school._id) {
+        throwEduError(EduError.FORBIDDEN, `Grade ${gradeId} does not belong to your school.`);
+      }
+    }
+
     const subjectId = await ctx.db.insert('subjects', {
       schoolId: school._id,
       name: args.name,
@@ -74,7 +82,16 @@ export const updateSubject = mutation({
     const updates: Partial<Doc<'subjects'>> = {};
     if (args.name !== undefined) updates.name = args.name;
     if (args.code !== undefined) updates.code = args.code;
-    if (args.gradeIds !== undefined) updates.gradeIds = args.gradeIds;
+    if (args.gradeIds !== undefined) {
+      // Validate all gradeIds belong to this school
+      for (const gradeId of args.gradeIds) {
+        const grade = await ctx.db.get(gradeId);
+        if (!grade || grade.schoolId !== school._id) {
+          throwEduError(EduError.FORBIDDEN, `Grade ${gradeId} does not belong to your school.`);
+        }
+      }
+      updates.gradeIds = args.gradeIds;
+    }
     if (args.isCompulsory !== undefined) updates.isCompulsory = args.isCompulsory;
     if (args.eczSubjectCode !== undefined) updates.eczSubjectCode = args.eczSubjectCode;
 

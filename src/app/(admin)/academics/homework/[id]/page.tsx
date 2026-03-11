@@ -40,7 +40,7 @@ import { format } from 'date-fns';
 interface HomeworkResource {
   type: string;
   title: string;
-  url?: string;
+  url?: string | null;
   storageId?: Id<'_storage'>;
 }
 
@@ -53,6 +53,34 @@ interface HomeworkFormData {
   totalPoints: string;
   status: 'draft' | 'published' | 'closed';
   resources: HomeworkResource[];
+}
+
+/**
+ * Format a UTC timestamp as a local datetime-local string (YYYY-MM-DDTHH:mm)
+ * without UTC shifting, so the displayed time matches the user's timezone.
+ */
+function toDateTimeLocal(ts: number): string {
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
+/**
+ * Strip null/undefined urls before sending resources to the mutation,
+ * which only accepts url?: string (not null).
+ */
+function sanitizeResources(
+  resources: HomeworkResource[],
+): Array<{ title: string; type: string; url?: string; storageId?: Id<'_storage'> }> {
+  return resources.map(({ title, type, url, storageId }) => ({
+    title,
+    type: type || 'file',
+    ...(url != null ? { url } : {}),
+    ...(storageId ? { storageId } : {}),
+  }));
 }
 
 export default function HomeworkEditorPage() {
@@ -72,7 +100,7 @@ export default function HomeworkEditorPage() {
   const generateUploadUrl = useMutation(api.academics.homework.generateUploadUrl);
   const gradeSubmission = useMutation(api.academics.homeworkSubmissions.gradeSubmission);
 
-  const [formData, setFormData] = useState<HomeworkFormData | null>(null);
+  const [formData, setFormData] = useState<HomeworkFormData | undefined>(undefined);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const [uploadingResource, setUploadingResource] = useState(false);
   const [activeTab, setActiveTab] = useState('editor');
@@ -82,13 +110,13 @@ export default function HomeworkEditorPage() {
 
   // Initialize form data once fetched
   useEffect(() => {
-    if (homework && !formData) {
+    if (homework && formData === undefined) {
       setFormData({
         title: homework.title,
         description: homework.description || '',
         subjectId: homework.subjectId,
         gradeId: homework.gradeId,
-        dueDate: new Date(homework.dueDate).toISOString().slice(0, 16), // datetime-local format
+        dueDate: toDateTimeLocal(homework.dueDate),
         totalPoints: homework.totalPoints ? String(homework.totalPoints) : '100',
         status: homework.status as 'draft' | 'published' | 'closed',
         resources: (homework.resources as HomeworkResource[]) || [],
@@ -105,7 +133,9 @@ export default function HomeworkEditorPage() {
       formData.description !== (homework.description || '') ||
       formData.status !== homework.status ||
       formData.totalPoints !== String(homework.totalPoints || '') ||
-      formData.dueDate !== new Date(homework.dueDate).toISOString().slice(0, 16);
+      formData.dueDate !== toDateTimeLocal(homework.dueDate) ||
+      formData.subjectId !== homework.subjectId ||
+      formData.gradeId !== homework.gradeId;
 
     if (!hasChanges) return;
 
@@ -119,6 +149,8 @@ export default function HomeworkEditorPage() {
           status: formData.status,
           totalPoints: formData.totalPoints ? parseInt(formData.totalPoints) : undefined,
           dueDate: new Date(formData.dueDate).getTime(),
+          subjectId: formData.subjectId as Id<'subjects'>,
+          gradeId: formData.gradeId as Id<'grades'>,
         });
         setSaveStatus('saved');
       } catch (err) {
@@ -153,14 +185,14 @@ export default function HomeworkEditorPage() {
 
       await updateHomework({
         id: homeworkId,
-        resources: [...(formData.resources || []), newResource],
+        resources: sanitizeResources([...(formData.resources || []), newResource]),
       });
 
       setFormData((prev) =>
-        prev ? { ...prev, resources: [...(prev.resources || []), newResource] } : null,
+        prev ? { ...prev, resources: [...(prev.resources || []), newResource] } : undefined,
       );
       toast.success('Resource attached!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to attach resource');
     } finally {
       setUploadingResource(false);
@@ -174,10 +206,10 @@ export default function HomeworkEditorPage() {
     try {
       await updateHomework({
         id: homeworkId,
-        resources: updatedResources,
+        resources: sanitizeResources(updatedResources),
       });
       setFormData({ ...formData, resources: updatedResources });
-    } catch (err) {
+    } catch {
       toast.error('Failed to remove resource');
     }
   };
@@ -188,7 +220,7 @@ export default function HomeworkEditorPage() {
       await deleteHomework({ id: homeworkId });
       toast.success('Assignment deleted');
       router.push('/academics/homework');
-    } catch (err) {
+    } catch {
       toast.error('Failed to delete assignment');
     }
   };
@@ -202,24 +234,24 @@ export default function HomeworkEditorPage() {
       });
       toast.success('Grade submitted successfully');
       setGradingSubId(null);
-    } catch (err) {
+    } catch {
       toast.error('Failed to submit grade');
     }
   };
-
-  if (homework === undefined || !formData) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   if (homework === null) {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center space-y-4">
         <h2 className="text-xl font-semibold">Assignment not found</h2>
         <Button onClick={() => router.push('/academics/homework')}>Back to Homework</Button>
+      </div>
+    );
+  }
+
+  if (homework === undefined || formData === undefined) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -418,7 +450,7 @@ export default function HomeworkEditorPage() {
                         <div className="flex items-center gap-2 overflow-hidden">
                           <FileIcon className="text-muted-foreground h-4 w-4 shrink-0" />
                           <a
-                            href={res.url}
+                            href={res.url ?? undefined}
                             target="_blank"
                             rel="noreferrer"
                             className="truncate hover:underline"

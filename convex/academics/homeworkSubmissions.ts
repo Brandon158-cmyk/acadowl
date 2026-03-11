@@ -1,37 +1,16 @@
 import { v } from 'convex/values';
 import { mutation, query } from '../_generated/server';
 import { Id } from '../_generated/dataModel';
+import { getAuthenticatedUserAndSchool } from '../_lib/schoolContext';
+import { EduError, throwEduError } from '../_lib/errors';
 
-export const submitHomework = mutation({
-  args: {
-    homeworkId: v.id('homework'),
-    content: v.optional(v.string()),
-    attachments: v.optional(
-      v.array(
-        v.object({
-          title: v.string(),
-          storageId: v.optional(v.id('_storage')),
-        }),
-      ),
-    ),
-  },
-  handler: async (ctx, args) => {
-    // In a real app we'd get the studentId from context/auth
-    // For now we'll pick the first student in the users table, or require it
-    // Wait, the schema requires studentId! Let's add it to args for testing.
-    return await ctx.db.insert('homeworkSubmissions', {
-      ...args,
-      studentId: args.homeworkId as unknown as Id<'users'>, // HACK: We need a real student ID. Let's make it an argument.
-      submittedAt: Date.now(),
-      status: 'submitted',
-    });
-  },
-});
+// submitHomework was removed — it had a data-corrupting bug (cast homeworkId as studentId).
+// Use submitHomeworkWithStudent instead.
 
 export const submitHomeworkWithStudent = mutation({
   args: {
     homeworkId: v.id('homework'),
-    studentId: v.id('users'),
+    studentId: v.id('students'),
     content: v.optional(v.string()),
     attachments: v.optional(
       v.array(
@@ -43,9 +22,11 @@ export const submitHomeworkWithStudent = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    // Check if homework exists
+    const { school } = await getAuthenticatedUserAndSchool(ctx);
+
+    // Check if homework exists and belongs to school
     const hw = await ctx.db.get(args.homeworkId);
-    if (!hw) throw new Error('Homework not found');
+    if (!hw || hw.schoolId !== school._id) throw new Error('Homework not found');
 
     // Check if already submitted
     const existing = await ctx.db
@@ -60,7 +41,7 @@ export const submitHomeworkWithStudent = mutation({
       await ctx.db.patch(existing._id, {
         content: args.content,
         attachments: args.attachments,
-        submittedAt: Date.now(), // Update timestamp
+        submittedAt: Date.now(),
         status: hw.dueDate < Date.now() ? 'late' : 'submitted',
       });
       return existing._id;
@@ -72,6 +53,7 @@ export const submitHomeworkWithStudent = mutation({
     return await ctx.db.insert('homeworkSubmissions', {
       homeworkId: args.homeworkId,
       studentId: args.studentId,
+      schoolId: school._id,
       content: args.content,
       attachments: args.attachments,
       submittedAt: Date.now(),
@@ -87,10 +69,35 @@ export const gradeSubmission = mutation({
     feedback: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const { school, user } = await getAuthenticatedUserAndSchool(ctx);
+
+    // Fetch submission; verify it belongs to the caller's school
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throwEduError(EduError.NOT_FOUND, 'Submission not found.');
+    }
+    if (submission!.schoolId !== school._id) {
+      throwEduError(EduError.FORBIDDEN, 'You do not have permission to grade this submission.');
+    }
+
+    // Fetch related homework to get totalPoints for bounds check
+    const homework = await ctx.db.get(submission!.homeworkId);
+    if (!homework) {
+      throwEduError(EduError.NOT_FOUND, 'Related homework not found.');
+    }
+
+    // Validate grade is within bounds
+    const maxPoints = homework!.totalPoints ?? 100;
+    if (args.grade < 0 || args.grade > maxPoints) {
+      throwEduError(EduError.FORBIDDEN, `Grade must be between 0 and ${maxPoints}.`);
+    }
+
     await ctx.db.patch(args.submissionId, {
       grade: args.grade,
       feedback: args.feedback,
       status: 'graded',
+      gradedBy: user._id,
+      gradedAt: new Date().toISOString(),
     });
   },
 });
@@ -98,6 +105,26 @@ export const gradeSubmission = mutation({
 export const getSubmissionsForHomework = query({
   args: { homeworkId: v.id('homework') },
   handler: async (ctx, args) => {
+    const { school, user } = await getAuthenticatedUserAndSchool(ctx);
+
+    // Verify the homework belongs to this school
+    const homework = await ctx.db.get(args.homeworkId);
+    if (!homework || homework.schoolId !== school._id) {
+      throwEduError(EduError.NOT_FOUND, 'Homework not found.');
+    }
+
+    // Only school admins or staff may view submissions
+    const isAdmin = user.role === 'school_admin' || user.role === 'platform_admin';
+    if (!isAdmin) {
+      const staff = await ctx.db
+        .query('staff')
+        .withIndex('by_user', (q) => q.eq('userId', user._id))
+        .first();
+      if (!staff || staff.schoolId !== school._id) {
+        throwEduError(EduError.FORBIDDEN, 'Only school staff may view submissions.');
+      }
+    }
+
     const submissions = await ctx.db
       .query('homeworkSubmissions')
       .withIndex('by_homework', (q) => q.eq('homeworkId', args.homeworkId))
@@ -126,7 +153,7 @@ export const getSubmissionsForHomework = query({
 
         return {
           ...sub,
-          studentName: student?.name || 'Unknown Student',
+          studentName: student ? `${student.firstName} ${student.lastName}` : 'Unknown Student',
           attachments: attachmentUrls,
         };
       }),

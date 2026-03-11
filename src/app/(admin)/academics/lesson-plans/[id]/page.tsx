@@ -81,7 +81,7 @@ export default function LessonPlanEditorPage({ params }: { params: Promise<{ id:
       formData.title !== plan.title ||
       formData.content !== (plan.content || '') ||
       formData.status !== plan.status ||
-      formData.duration !== (plan.duration || '') ||
+      Number(formData.duration || 0) !== (plan.duration || 0) ||
       formData.syllabusTopicRef !== (plan.syllabusTopicRef || '') ||
       formData.visibility !== plan.visibility;
 
@@ -192,16 +192,16 @@ export default function LessonPlanEditorPage({ params }: { params: Promise<{ id:
     }
   };
 
+  if (plan === null) {
+    return <div className="p-12 text-center text-red-500">Lesson plan not found.</div>;
+  }
+
   if (plan === undefined || !formData) {
     return (
       <div className="flex items-center justify-center p-12">
         <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
       </div>
     );
-  }
-
-  if (plan === null) {
-    return <div className="p-12 text-center text-red-500">Lesson plan not found.</div>;
   }
 
   return (

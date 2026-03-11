@@ -889,6 +889,7 @@ const schema = defineSchema({
 
   // ── HOMEWORK & SUBMISSIONS (Sprint 01 — ISSUE-047) ──
   homework: defineTable({
+    schoolId: v.id('schools'),
     title: v.string(),
     description: v.optional(v.string()), // Allows rich text
     subjectId: v.id('subjects'),
@@ -907,13 +908,15 @@ const schema = defineSchema({
       ),
     ),
   })
+    .index('by_school', ['schoolId'])
     .index('by_subject', ['subjectId'])
     .index('by_grade', ['gradeId'])
     .index('by_status', ['status']),
 
   homeworkSubmissions: defineTable({
     homeworkId: v.id('homework'),
-    studentId: v.id('users'), // Students taking the homework
+    studentId: v.id('students'), // Students taking the homework
+    schoolId: v.id('schools'),
     submittedAt: v.number(),
     content: v.optional(v.string()),
     attachments: v.optional(
@@ -927,7 +930,10 @@ const schema = defineSchema({
     status: v.union(v.literal('submitted'), v.literal('graded'), v.literal('late')),
     grade: v.optional(v.number()),
     feedback: v.optional(v.string()),
+    gradedBy: v.optional(v.id('users')),
+    gradedAt: v.optional(v.string()),
   })
+    .index('by_school', ['schoolId'])
     .index('by_homework', ['homeworkId'])
     .index('by_student', ['studentId'])
     .index('by_homework_student', ['homeworkId', 'studentId']),
