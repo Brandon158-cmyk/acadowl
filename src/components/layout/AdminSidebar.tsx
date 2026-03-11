@@ -11,8 +11,10 @@ import {
   adminSettingsNavConfig,
   type NavItem,
 } from '@/lib/navigation/adminNavConfig';
+import { Feature } from '@/lib/features/flags';
+import { Permission } from '@/lib/roles/types';
 import { SchoolLogo } from '@/components/school/SchoolLogo';
-import { ChevronLeft, Settings, LogOut } from 'lucide-react';
+import { ChevronLeft, LogOut } from 'lucide-react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -126,16 +128,18 @@ function NavLink({
   pathname: string;
   collapsed: boolean;
 }) {
+  // Unconditional hook calls to obey Rules of Hooks
+  const enabled = useFeature(item.requiredFeature as Feature);
+  const allowed = usePermission(item.requiredPermission as Permission);
+
   // Feature gate
-  if (item.requiredFeature) {
-    const enabled = useFeature(item.requiredFeature);
-    if (!enabled) return null;
+  if (item.requiredFeature && !enabled) {
+    return null;
   }
 
   // Permission gate
-  if (item.requiredPermission) {
-    const allowed = usePermission(item.requiredPermission);
-    if (!allowed) return null;
+  if (item.requiredPermission && !allowed) {
+    return null;
   }
 
   const Icon = item.icon;
