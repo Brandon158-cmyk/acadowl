@@ -67,6 +67,30 @@ export const adminNavConfig: NavItem[] = [
     label: 'Academics',
     href: '/academics',
     icon: BookOpen,
+    children: [
+      {
+        label: 'Subjects',
+        href: '/academics/subjects',
+        icon: BookOpen,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+      },
+      {
+        label: 'Grades',
+        href: '/academics/grades',
+        icon: GraduationCap,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+      },
+      {
+        label: 'Lesson Plans',
+        href: '/academics/lesson-plans',
+        icon: FileText,
+      },
+      {
+        label: 'Homework',
+        href: '/academics/homework',
+        icon: BookOpen,
+      },
+    ],
   },
   {
     label: 'Exams',

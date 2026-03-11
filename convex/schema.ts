@@ -795,6 +795,37 @@ const schema = defineSchema({
     .index('by_school', ['schoolId'])
     .index('by_borrower', ['borrowerId']),
 
+  // ── LESSON PLANS (Sprint 01 — ISSUE-046) ──
+  lessonPlans: defineTable({
+    schoolId: v.id('schools'),
+    staffId: v.id('staff'),
+    subjectId: v.id('subjects'),
+    gradeId: v.id('grades'),
+    title: v.string(),
+    content: v.optional(v.string()), // Rich text content from TipTap
+    status: v.union(v.literal('draft'), v.literal('published')),
+    syllabusTopicRef: v.optional(v.string()), // MoE topic reference code
+    learningObjectives: v.array(v.string()),
+    duration: v.optional(v.number()), // Minutes, optional for drafts
+    resources: v.array(
+      v.object({
+        type: v.union(v.literal('pdf'), v.literal('link'), v.literal('text')),
+        title: v.string(),
+        url: v.optional(v.string()),
+        storageId: v.optional(v.id('_storage')),
+        content: v.optional(v.string()),
+      }),
+    ),
+    visibility: v.union(v.literal('private'), v.literal('school')),
+    // Sprint 05: lmsLessonId added when converted to LMS lesson
+    lmsLessonId: v.optional(v.id('lmsLessons')),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_staff', ['staffId'])
+    .index('by_subject_grade', ['subjectId', 'gradeId']),
+
   // ── LMS (Sprint 05) ──
   lmsCourses: defineTable({
     schoolId: v.id('schools'),
@@ -855,6 +886,51 @@ const schema = defineSchema({
   })
     .index('by_lesson', ['lessonId'])
     .index('by_student', ['studentId']),
+
+  // ── HOMEWORK & SUBMISSIONS (Sprint 01 — ISSUE-047) ──
+  homework: defineTable({
+    title: v.string(),
+    description: v.optional(v.string()), // Allows rich text
+    subjectId: v.id('subjects'),
+    gradeId: v.id('grades'),
+    dueDate: v.number(), // Timestamp
+    totalPoints: v.optional(v.number()),
+    status: v.union(v.literal('draft'), v.literal('published'), v.literal('closed')),
+    resources: v.optional(
+      v.array(
+        v.object({
+          title: v.string(),
+          type: v.string(),
+          url: v.optional(v.string()),
+          storageId: v.optional(v.id('_storage')),
+        }),
+      ),
+    ),
+  })
+    .index('by_subject', ['subjectId'])
+    .index('by_grade', ['gradeId'])
+    .index('by_status', ['status']),
+
+  homeworkSubmissions: defineTable({
+    homeworkId: v.id('homework'),
+    studentId: v.id('users'), // Students taking the homework
+    submittedAt: v.number(),
+    content: v.optional(v.string()),
+    attachments: v.optional(
+      v.array(
+        v.object({
+          title: v.string(),
+          storageId: v.optional(v.id('_storage')),
+        }),
+      ),
+    ),
+    status: v.union(v.literal('submitted'), v.literal('graded'), v.literal('late')),
+    grade: v.optional(v.number()),
+    feedback: v.optional(v.string()),
+  })
+    .index('by_homework', ['homeworkId'])
+    .index('by_student', ['studentId'])
+    .index('by_homework_student', ['homeworkId', 'studentId']),
 
   // ── SCHOOL EVENTS / CALENDAR (Sprint 01 — ISSUE-043) ──
   schoolEvents: defineTable({
