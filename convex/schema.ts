@@ -856,6 +856,31 @@ const schema = defineSchema({
     .index('by_lesson', ['lessonId'])
     .index('by_student', ['studentId']),
 
+  // ── SCHOOL EVENTS / CALENDAR (Sprint 01 — ISSUE-043) ──
+  schoolEvents: defineTable({
+    schoolId: v.id('schools'),
+    academicYearId: v.id('academicYears'),
+    termId: v.optional(v.id('terms')),
+    title: v.string(),
+    description: v.optional(v.string()),
+    startDate: v.string(),
+    endDate: v.string(),
+    type: v.union(
+      v.literal('holiday'),
+      v.literal('exam_period'),
+      v.literal('sports_day'),
+      v.literal('school_closure'),
+      v.literal('parent_teacher'),
+      v.literal('general'),
+    ),
+    affectsAttendance: v.boolean(),
+    visibleToParents: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_academic_year', ['schoolId', 'academicYearId'])
+    .index('by_school_start', ['schoolId', 'startDate']),
+
   // ── CONVEX AUTH TABLES ──
   // Required by @convex-dev/auth
   authAccounts: defineTable({
