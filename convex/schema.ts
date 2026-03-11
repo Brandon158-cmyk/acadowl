@@ -878,7 +878,8 @@ const schema = defineSchema({
     createdAt: v.number(),
   })
     .index('by_school', ['schoolId'])
-    .index('by_academic_year', ['schoolId', 'academicYearId']),
+    .index('by_academic_year', ['schoolId', 'academicYearId'])
+    .index('by_school_start', ['schoolId', 'startDate']),
 
   // ── CONVEX AUTH TABLES ──
   // Required by @convex-dev/auth

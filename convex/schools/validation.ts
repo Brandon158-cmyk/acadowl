@@ -24,8 +24,8 @@ export function validateTermDates(
     if (term.startDate >= term.endDate) {
       throw new Error(`${term.name}: Start date must be before end date.`);
     }
-    if (i > 0 && sortedTerms[i - 1].endDate > term.startDate) {
-      throw new Error(`Term dates overlap: ${sortedTerms[i - 1].name} and ${term.name}.`);
+    if (i > 0 && sortedTerms[i - 1].endDate >= term.startDate) {
+      throw new Error(`Term dates overlap or touch: ${sortedTerms[i - 1].name} and ${term.name}.`);
     }
   }
 }
@@ -34,8 +34,11 @@ export function isSchoolDayPure(
   date: string,
   events: Array<{ affectsAttendance: boolean; startDate: string; endDate: string }>,
 ): boolean {
-  const d = new Date(date);
-  const dayOfWeek = d.getDay();
+  // Use UTC to avoid timezone drift for simple YYYY-MM-DD strings
+  const [year, month, day] = date.split('-').map(Number);
+  const d = new Date(Date.UTC(year, month - 1, day));
+  const dayOfWeek = d.getUTCDay();
+
   if (dayOfWeek === 0 || dayOfWeek === 6) {
     return false; // Weekend
   }

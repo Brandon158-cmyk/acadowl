@@ -90,12 +90,25 @@ export const activateAcademicYear = mutation({
       }
     }
 
+    // Deactivate all terms for this school
+    const allTerms = await ctx.db
+      .query('terms')
+      .withIndex('by_school', (q) => q.eq('schoolId', school._id))
+      .collect();
+
+    for (const term of allTerms) {
+      if (term.isActive) {
+        await ctx.db.patch(term._id, { isActive: false });
+      }
+    }
+
     // Activate the target year
     await ctx.db.patch(args.academicYearId, { isActive: true });
 
-    // Update school's current academic year pointer
+    // Update school's current academic year pointer and clear term
     await ctx.db.patch(school._id, {
       currentAcademicYearId: args.academicYearId,
+      currentTermId: undefined,
       updatedAt: Date.now(),
     });
 

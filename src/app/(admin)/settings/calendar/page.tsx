@@ -69,6 +69,16 @@ const EVENT_TYPES = {
 } as const;
 
 type EventType = keyof typeof EVENT_TYPES;
+interface SchoolEvent {
+  _id: Id<'schoolEvents'>;
+  title: string;
+  startDate: string;
+  endDate: string;
+  type: string;
+  affectsAttendance: boolean;
+  visibleToParents: boolean;
+  description?: string;
+}
 
 // ────────────────────────────────────────
 // Calendar Page
@@ -123,9 +133,8 @@ export default function SchoolCalendarPage() {
     try {
       const result = await seedHolidays({ academicYearId: currentYear._id });
       toast.success(`Imported ${result.imported} Zambia public holiday(s).`);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Failed to import holidays.';
-      toast.error(msg);
+    } catch {
+      toast.error('Failed to import holidays.');
     } finally {
       setSeedLoading(false);
     }
@@ -135,7 +144,7 @@ export default function SchoolCalendarPage() {
     try {
       await deleteEvent({ eventId });
       toast.success('Event deleted.');
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete event.');
     }
   };
@@ -204,12 +213,7 @@ export default function SchoolCalendarPage() {
       </div>
 
       {/* Calendar grid */}
-      <CalendarGrid
-        year={currentMonth.year}
-        month={currentMonth.month}
-        events={events || []}
-        onDeleteEvent={handleDeleteEvent}
-      />
+      <CalendarGrid year={currentMonth.year} month={currentMonth.month} events={events || []} />
 
       {/* Events list for the month */}
       <Card>
@@ -238,18 +242,10 @@ function CalendarGrid({
   year,
   month,
   events,
-  onDeleteEvent,
 }: {
   year: number;
   month: number;
-  events: Array<{
-    _id: Id<'schoolEvents'>;
-    startDate: string;
-    endDate: string;
-    title: string;
-    type: string;
-  }>;
-  onDeleteEvent: (id: Id<'schoolEvents'>) => void;
+  events: SchoolEvent[];
 }) {
   const days = useMemo(() => {
     const firstDay = new Date(year, month, 1);
@@ -350,23 +346,15 @@ function EventsList({
   month,
   onDelete,
 }: {
-  events: Array<{
-    _id: Id<'schoolEvents'>;
-    title: string;
-    startDate: string;
-    endDate: string;
-    type: string;
-    affectsAttendance: boolean;
-    visibleToParents: boolean;
-  }>;
+  events: SchoolEvent[];
   year: number;
   month: number;
   onDelete: (id: Id<'schoolEvents'>) => void;
 }) {
-  const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-  const monthEvents = events.filter(
-    (e) => e.startDate.startsWith(monthStr) || e.endDate.startsWith(monthStr),
-  );
+  const firstDay = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0];
+
+  const monthEvents = events.filter((e) => e.startDate <= lastDay && e.endDate >= firstDay);
 
   if (monthEvents.length === 0) {
     return <p className="text-muted-foreground text-sm">No events this month.</p>;

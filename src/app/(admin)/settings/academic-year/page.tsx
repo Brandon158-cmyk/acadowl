@@ -139,7 +139,7 @@ function CreateAcademicYearDialog({ onClose }: { onClose: () => void }) {
     setLoading(true);
     try {
       await createYear({
-        year: form.year,
+        year: Number(form.year),
         label: form.label,
         startDate: form.startDate,
         endDate: form.endDate,
@@ -171,13 +171,17 @@ function CreateAcademicYearDialog({ onClose }: { onClose: () => void }) {
                 id="year"
                 type="number"
                 value={form.year}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    year: parseInt(e.target.value),
-                    label: `${e.target.value} Academic Year`,
-                  })
-                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const parsed = parseInt(val);
+                  setForm((prev) => ({
+                    ...prev,
+                    year: isNaN(parsed) ? 0 : parsed,
+                    label: val ? `${val} Academic Year` : prev.label,
+                    startDate: !isNaN(parsed) ? `${parsed}-01-13` : prev.startDate,
+                    endDate: !isNaN(parsed) ? `${parsed}-12-06` : prev.endDate,
+                  }));
+                }}
                 min={2020}
                 max={2050}
                 required
@@ -383,10 +387,9 @@ function TermsSection({
   yearIsActive: boolean;
 }) {
   const terms = useQuery(api.schools.terms.getTermsByYear, { academicYearId });
-  const createTerms = useMutation(api.schools.terms.createTerms);
-  const activateTerm = useMutation(api.schools.terms.activateTerm);
-  const [loading, setLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  const activateTerm = useMutation(api.schools.terms.activateTerm);
 
   const handleActivateTerm = async (termId: Id<'terms'>) => {
     try {
@@ -400,28 +403,6 @@ function TermsSection({
 
   const isSemester = academicMode === 'semester';
   const termLabel = isSemester ? 'Semester' : 'Term';
-
-  /** Auto-generate default terms for quick setup. */
-  const handleQuickSetup = async () => {
-    setLoading(true);
-    try {
-      const defaultTerms = isSemester
-        ? [
-            { name: 'Semester 1', termNumber: 1, startDate: '', endDate: '' },
-            { name: 'Semester 2', termNumber: 2, startDate: '', endDate: '' },
-          ]
-        : [
-            { name: 'Term 1', termNumber: 1, startDate: '', endDate: '' },
-            { name: 'Term 2', termNumber: 2, startDate: '', endDate: '' },
-            { name: 'Term 3', termNumber: 3, startDate: '', endDate: '' },
-          ];
-
-      // We need dates — open the create dialog instead
-      setCreateDialogOpen(true);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (!terms) {
     return (

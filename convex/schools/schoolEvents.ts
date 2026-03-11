@@ -106,6 +106,13 @@ export const updateSchoolEvent = mutation({
       }
     }
 
+    // Validate date range if updated
+    const newStart = (cleanUpdates.startDate as string) || event.startDate;
+    const newEnd = (cleanUpdates.endDate as string) || event.endDate;
+    if (newStart > newEnd) {
+      throwEduError(EduError.VALIDATION_ERROR, 'Start date must be before or equal to end date.');
+    }
+
     await ctx.db.patch(args.eventId, cleanUpdates);
     return args.eventId;
   },
@@ -152,18 +159,29 @@ export const seedZambiaHolidays = mutation({
     for (const holiday of holidays) {
       // Only insert holidays that fall within the academic year date range
       if (holiday.date >= academicYear.startDate && holiday.date <= academicYear.endDate) {
-        await ctx.db.insert('schoolEvents', {
-          schoolId: school._id,
-          academicYearId: args.academicYearId,
-          title: holiday.title,
-          startDate: holiday.date,
-          endDate: holiday.date,
-          type: 'holiday',
-          affectsAttendance: true,
-          visibleToParents: true,
-          createdAt: now,
-        });
-        count++;
+        // Duplicate check
+        const existing = await ctx.db
+          .query('schoolEvents')
+          .withIndex('by_school_start', (q) =>
+            q.eq('schoolId', school._id).eq('startDate', holiday.date),
+          )
+          .filter((q) => q.eq(q.field('title'), holiday.title))
+          .first();
+
+        if (!existing) {
+          await ctx.db.insert('schoolEvents', {
+            schoolId: school._id,
+            academicYearId: args.academicYearId,
+            title: holiday.title,
+            startDate: holiday.date,
+            endDate: holiday.date,
+            type: 'holiday',
+            affectsAttendance: true,
+            visibleToParents: true,
+            createdAt: now,
+          });
+          count++;
+        }
       }
     }
 
@@ -206,15 +224,17 @@ export const getEventsForDateRange = query({
   },
   handler: async (ctx, args) => {
     return withSchoolScope(ctx, async ({ ctx, schoolId }) => {
-      const allEvents = await ctx.db
+      // Use the school_start index to narrow down the events
+      // Events overlapping [rangeStart, rangeEnd] must have startDate <= rangeEnd
+      const events = await ctx.db
         .query('schoolEvents')
-        .withIndex('by_school', (q) => q.eq('schoolId', schoolId))
+        .withIndex('by_school_start', (q) =>
+          q.eq('schoolId', schoolId).lte('startDate', args.endDate),
+        )
         .collect();
 
-      // Filter to events that overlap with the requested date range
-      return allEvents.filter(
-        (event) => event.startDate <= args.endDate && event.endDate >= args.startDate,
-      );
+      // Final filter for endDate
+      return events.filter((event) => event.endDate >= args.startDate);
     });
   },
 });
@@ -231,16 +251,15 @@ export const getUpcomingEvents = query({
         .toISOString()
         .split('T')[0];
 
-      const allEvents = await ctx.db
+      const events = await ctx.db
         .query('schoolEvents')
-        .withIndex('by_school', (q) => q.eq('schoolId', schoolId))
+        .withIndex('by_school_start', (q) =>
+          q.eq('schoolId', schoolId).lte('startDate', thirtyDaysLater),
+        )
         .collect();
 
-      return allEvents
-        .filter(
-          (event) =>
-            event.visibleToParents && event.endDate >= today && event.startDate <= thirtyDaysLater,
-        )
+      return events
+        .filter((event) => event.visibleToParents && event.endDate >= today)
         .sort((a, b) => a.startDate.localeCompare(b.startDate));
     });
   },

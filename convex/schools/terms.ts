@@ -54,7 +54,19 @@ export const createTerms = mutation({
     }
 
     // Check for existing terms in this academic year
-    const existingTerms = await ctx.db;
+    const existing = await ctx.db
+      .query('terms')
+      .withIndex('by_academic_year', (q) =>
+        q.eq('schoolId', school._id).eq('academicYearId', args.academicYearId),
+      )
+      .first();
+
+    if (existing) {
+      throwEduError(
+        EduError.VALIDATION_ERROR,
+        'Terms already exist for this academic year. Update them individually or contact support.',
+      );
+    }
 
     // Create all terms
     const sortedTerms = [...args.terms].sort((a, b) => a.startDate.localeCompare(b.startDate));
@@ -207,16 +219,16 @@ export const getCurrentTerm = query({
       const term = await ctx.db.get(school.currentTermId);
       if (!term) return null;
 
-      // Calculate days remaining
-      const today = new Date();
-      const endDate = new Date(term.endDate);
-      const diffMs = endDate.getTime() - today.getTime();
+      // Calculate days remaining (UTC normalized)
+      const now = Date.now();
+      const end = new Date(term.endDate).getTime();
+      const diffMs = end - now;
       const daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
       // Check if currently in exam period
       let isExamPeriod = false;
       if (term.examStartDate && term.examEndDate) {
-        const todayStr = today.toISOString().split('T')[0];
+        const todayStr = new Date().toISOString().split('T')[0];
         isExamPeriod = todayStr >= term.examStartDate && todayStr <= term.examEndDate;
       }
 
