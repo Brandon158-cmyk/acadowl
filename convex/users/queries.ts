@@ -1,0 +1,120 @@
+import { query } from '../_generated/server';
+import { requireSchoolAdmin } from '../_lib/permissions';
+import { Doc, Id } from '../_generated/dataModel';
+import { resolveUser } from '../_lib/schoolContext';
+
+/**
+ * User query functions.
+ */
+
+/** Get the current authenticated user with their linked profile and school */
+export const getMe = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    // Use shared robust resolution
+    const user = await resolveUser(ctx, identity);
+
+    if (!user) return null;
+
+    // Auto-patch tokenIdentifier if missing but user found by email/session
+    // (Queries can't patch, but we note it for next mutation)
+
+    // Fetch linked profile
+    let staffProfile = null;
+    let guardianProfile = null;
+    let studentProfile = null;
+    let school = null;
+    const guardianProfiles: any[] = [];
+
+    if (user.staffId) {
+      staffProfile = await ctx.db.get(user.staffId);
+    }
+    if (user.studentId) {
+      studentProfile = await ctx.db.get(user.studentId);
+    }
+    if (user.schoolId) {
+      school = await ctx.db.get(user.schoolId);
+    }
+
+    if (user.role === 'guardian' && user.phone) {
+      // Find all guardian profiles across schools
+      const guardians = await ctx.db
+        .query('guardians')
+        .withIndex('by_phone', (q) => q.eq('phone', user.phone!))
+        .collect();
+
+      if (guardians.length > 0) {
+        guardianProfile = guardians[0]; // Set default for backward compatibility
+
+        for (const g of guardians) {
+          const children = await ctx.db
+            .query('students')
+            .withIndex('by_school', (q) => q.eq('schoolId', g.schoolId))
+            .collect();
+
+          const linkedChildren = children.filter((c) =>
+            c.guardianLinks.some((link) => link.guardianId === g._id),
+          );
+
+          const gSchool = await ctx.db.get(g.schoolId);
+
+          if (gSchool) {
+            guardianProfiles.push({
+              schoolId: g.schoolId,
+              school: gSchool,
+              guardianId: g._id,
+              children: linkedChildren,
+            });
+          }
+        }
+      }
+    } else if (user.guardianId) {
+      // Fallback
+      guardianProfile = await ctx.db.get(user.guardianId);
+    }
+
+    return {
+      user: {
+        ...user,
+      },
+      debug: {
+        identityEmail: identity.email,
+        identitySubject: identity.subject,
+        identityToken: identity.tokenIdentifier,
+        foundBy:
+          user._id ===
+          (
+            await ctx.db
+              .query('users')
+              .withIndex('tokenIdentifier', (q) =>
+                q.eq('tokenIdentifier', identity.tokenIdentifier),
+              )
+              .unique()
+          )?._id
+            ? 'token'
+            : 'email',
+      },
+      staff: staffProfile,
+      guardian: guardianProfile,
+      guardianProfiles,
+      student: studentProfile,
+      school,
+    };
+  },
+});
+
+/** Get all users for a school (admin use) */
+export const getUsersBySchool = query({
+  args: {},
+  handler: async (ctx) => {
+    const { school } = await requireSchoolAdmin(ctx);
+
+    return ctx.db
+      .query('users')
+      .withIndex('by_school', (q) => q.eq('schoolId', school._id))
+      .collect();
+  },
+});
