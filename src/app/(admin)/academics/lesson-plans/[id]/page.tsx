@@ -163,9 +163,11 @@ export default function LessonPlanEditorPage({ params }: { params: Promise<{ id:
   const removeResource = async (index: number) => {
     if (!formData) return;
 
-    const newResources = [...(formData.resources || [])];
+    const prevResources = formData.resources || [];
+    const newResources = [...prevResources];
     newResources.splice(index, 1);
 
+    // Optimistic update
     setFormData((prev) => (prev ? { ...prev, resources: newResources } : null));
 
     try {
@@ -177,18 +179,26 @@ export default function LessonPlanEditorPage({ params }: { params: Promise<{ id:
       setSaveStatus('saved');
     } catch (error) {
       console.error(error);
+      // Roll back to previous state on failure
+      setFormData((prev) => (prev ? { ...prev, resources: prevResources } : null));
       setSaveStatus('error');
       toast.error('Failed to remove resource');
     }
   };
 
-  const handlePublishToggle = () => {
-    const newStatus = formData?.status === 'draft' ? 'published' : 'draft';
+  const handlePublishToggle = async () => {
+    if (!formData) return;
+    const newStatus = formData.status === 'draft' ? 'published' : 'draft';
+    // Optimistic UI flip
     setFormData((prev) => (prev ? { ...prev, status: newStatus } : null));
-    if (newStatus === 'published') {
-      toast.success('Lesson Plan Published!');
-    } else {
-      toast.success('Reverted to Draft.');
+    try {
+      await updatePlan({ id: planId, status: newStatus });
+      toast.success(newStatus === 'published' ? 'Lesson Plan Published!' : 'Reverted to Draft.');
+    } catch (error) {
+      console.error(error);
+      // Roll back on failure
+      setFormData((prev) => (prev ? { ...prev, status: formData.status } : null));
+      toast.error('Failed to update status. Please try again.');
     }
   };
 

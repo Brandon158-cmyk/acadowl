@@ -37,7 +37,11 @@ export const submitHomeworkWithStudent = mutation({
       .first();
 
     if (existing) {
-      // Update existing submission
+      // Block resubmission once a submission has been graded — preserve the grade.
+      if (existing.status === 'graded') {
+        throw new Error('Resubmission is not allowed after a submission has been graded.');
+      }
+      // Update existing (ungraded) submission
       await ctx.db.patch(existing._id, {
         content: args.content,
         attachments: args.attachments,
@@ -97,7 +101,7 @@ export const gradeSubmission = mutation({
       feedback: args.feedback,
       status: 'graded',
       gradedBy: user._id,
-      gradedAt: new Date().toISOString(),
+      gradedAt: Date.now(), // epoch number, consistent with submittedAt
     });
   },
 });

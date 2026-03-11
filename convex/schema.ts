@@ -931,7 +931,7 @@ const schema = defineSchema({
     grade: v.optional(v.number()),
     feedback: v.optional(v.string()),
     gradedBy: v.optional(v.id('users')),
-    gradedAt: v.optional(v.string()),
+    gradedAt: v.optional(v.number()),
   })
     .index('by_school', ['schoolId'])
     .index('by_homework', ['homeworkId'])

@@ -159,8 +159,7 @@ export const getPlanById = query({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    const { school } = await getAuthenticatedUserAndSchool(ctx);
-    if (!school) throwEduError(EduError.UNAUTHENTICATED, 'Unauthorized');
+    await getAuthenticatedUserAndSchool(ctx); // throws if unauthenticated
     return await ctx.storage.generateUploadUrl();
   },
 });

@@ -226,10 +226,20 @@ export default function HomeworkEditorPage() {
   };
 
   const submitGrade = async (subId: Id<'homeworkSubmissions'>) => {
+    const parsedGrade = Number(tempGrade);
+    if (!tempGrade.trim() || !Number.isFinite(parsedGrade) || !Number.isInteger(parsedGrade)) {
+      toast.error('Please enter a valid whole number for the grade.');
+      return;
+    }
+    const maxPoints = homework?.totalPoints ?? 100;
+    if (parsedGrade < 0 || parsedGrade > maxPoints) {
+      toast.error(`Grade must be between 0 and ${maxPoints}.`);
+      return;
+    }
     try {
       await gradeSubmission({
         submissionId: subId,
-        grade: parseInt(tempGrade),
+        grade: parsedGrade,
         feedback: tempFeedback,
       });
       toast.success('Grade submitted successfully');

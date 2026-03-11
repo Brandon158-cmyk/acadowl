@@ -251,19 +251,37 @@ export const seedDefaultSubjects = mutation({
           isCompulsory: sub.isCompulsory,
         });
       });
+    } else {
+      // Unknown school type — skip seeding and surface a clear message so admins know.
+      console.warn(
+        `seedDefaultSubjects: unknown school.type "${school.type}" for school ${school._id}. No subjects were created.`,
+      );
+      return { created: 0, skipped: 0, message: `Unknown school type: ${school.type}` };
     }
 
-    // Insert only if they don't already exist to prevent dupes
+    // Insert only if neither name nor code already exists for this school (mirrors createSubject's uniqueness rules)
+    let created = 0;
+    let skipped = 0;
     for (const sub of subjectsToCreate) {
       const existing = await ctx.db
         .query('subjects')
         .withIndex('by_school', (q) => q.eq('schoolId', school._id))
-        .filter((q) => q.eq(q.field('name'), sub.name))
+        .filter((q) =>
+          q.or(
+            q.eq(q.field('name'), sub.name),
+            // Only compare codes when the candidate subject has a code
+            ...(sub.code ? [q.eq(q.field('code'), sub.code)] : []),
+          ),
+        )
         .first();
 
       if (!existing) {
         await ctx.db.insert('subjects', sub);
+        created++;
+      } else {
+        skipped++;
       }
     }
+    return { created, skipped };
   },
 });

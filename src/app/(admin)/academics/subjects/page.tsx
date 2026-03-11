@@ -88,7 +88,11 @@ export default function SubjectsPage() {
     }
   };
 
-  const handleDeactivate = async (id: string) => {
+  const handleDeactivate = async (id: string, name: string) => {
+    const confirmed = window.confirm(
+      `Deactivate "${name}"? It will be hidden from new timetables and exams but historical data will be preserved.`,
+    );
+    if (!confirmed) return;
     try {
       await deactivateSubject({
         id: id as import('../../../../../convex/_generated/dataModel').Id<'subjects'>,
@@ -296,7 +300,7 @@ export default function SubjectsPage() {
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDeactivate(subject._id)}
+                      onClick={() => handleDeactivate(subject._id, subject.name)}
                     >
                       Deactivate
                     </Button>
