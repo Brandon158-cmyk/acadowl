@@ -9,14 +9,14 @@ import { Topbar } from '@/components/layout/Topbar';
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="flex min-h-screen">
+      <div className="flex h-screen overflow-hidden">
         {/* Sidebar — hidden on mobile, shown on md+ */}
-        <div className="hidden md:flex">
+        <div className="hidden shrink-0 md:flex">
           <TeacherSidebar />
         </div>
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
-          <main role="main" className="flex-1 overflow-auto">
+          <main role="main" className="flex-1 overflow-y-auto">
             <div className="p-4 md:p-6 lg:p-8">{children}</div>
           </main>
         </div>

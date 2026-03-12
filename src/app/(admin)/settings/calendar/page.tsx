@@ -38,33 +38,33 @@ import {
 const EVENT_TYPES = {
   holiday: {
     label: 'Holiday',
-    color: 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300',
-    dot: 'bg-red-500',
+    color: 'bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]/60',
+    dot: 'bg-[#DC2626]',
   },
   exam_period: {
     label: 'Exam Period',
-    color: 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300',
-    dot: 'bg-amber-500',
+    color: 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]/60',
+    dot: 'bg-[#D97706]',
   },
   sports_day: {
     label: 'Sports Day',
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300',
-    dot: 'bg-blue-500',
+    color: 'bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE]/60',
+    dot: 'bg-[#2563EB]',
   },
   school_closure: {
     label: 'Closure',
-    color: 'bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300',
-    dot: 'bg-orange-500',
+    color: 'bg-[#FFF7ED] text-[#EA580C] border border-[#FED7AA]/60',
+    dot: 'bg-[#EA580C]',
   },
   parent_teacher: {
     label: 'PTM',
-    color: 'bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300',
-    dot: 'bg-purple-500',
+    color: 'bg-[#F5F3FF] text-[#7C3AED] border border-[#DDD6FE]/60',
+    dot: 'bg-[#7C3AED]',
   },
   general: {
     label: 'General',
-    color: 'bg-gray-100 text-gray-800 dark:bg-gray-950/40 dark:text-gray-300',
-    dot: 'bg-gray-500',
+    color: 'bg-[#F9FAFB] text-[#374151] border border-[#E5E7EB]',
+    dot: 'bg-[#6B7280]',
   },
 } as const;
 
@@ -169,9 +169,9 @@ export default function SchoolCalendarPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-12">
       <PageHeader title="School Calendar" description={`Events for ${currentYear.label}`}>
-        <Button size="sm" variant="outline" onClick={handleSeedHolidays} disabled={seedLoading}>
+        <Button variant="outline" onClick={handleSeedHolidays} disabled={seedLoading}>
           {seedLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -180,7 +180,7 @@ export default function SchoolCalendarPage() {
           Import Zambia Holidays
         </Button>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger render={<Button size="sm" />}>
+          <DialogTrigger render={<Button />}>
             <Plus className="mr-2 h-4 w-4" />
             Add Event
           </DialogTrigger>
@@ -192,34 +192,54 @@ export default function SchoolCalendarPage() {
       </PageHeader>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-4">
         {Object.entries(EVENT_TYPES).map(([key, config]) => (
-          <div key={key} className="flex items-center gap-1.5">
+          <div key={key} className="flex items-center gap-2">
             <div className={`h-2.5 w-2.5 rounded-full ${config.dot}`} />
-            <span className="text-muted-foreground text-xs">{config.label}</span>
+            <span className="text-[13px] font-medium text-[#6B7280]">{config.label}</span>
           </div>
         ))}
       </div>
 
-      {/* Month navigation */}
-      <div className="flex items-center justify-between">
-        <Button size="sm" variant="ghost" onClick={prevMonth}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <h3 className="text-sm font-medium">{monthName}</h3>
-        <Button size="sm" variant="ghost" onClick={nextMonth}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+      <Card className="border border-[#E5E7EB] shadow-sm">
+        <CardContent className="space-y-6 p-0 sm:p-6 lg:p-8">
+          {/* Month navigation */}
+          <div className="flex items-center justify-between">
+            <h3 className="font-heading text-lg font-semibold text-[#111827]">{monthName}</h3>
+            <div className="flex rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-1">
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={prevMonth}
+                className="h-7 w-7 text-[#6B7280] hover:text-[#111827]"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={nextMonth}
+                className="h-7 w-7 text-[#6B7280] hover:text-[#111827]"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-      {/* Calendar grid */}
-      <CalendarGrid year={currentMonth.year} month={currentMonth.month} events={events || []} />
+          {/* Calendar grid */}
+          <CalendarGrid year={currentMonth.year} month={currentMonth.month} events={events || []} />
+        </CardContent>
+      </Card>
 
       {/* Events list for the month */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Events This Month</CardTitle>
-          <CardDescription>{monthName}</CardDescription>
+      <Card className="border border-[#E5E7EB] shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="font-heading text-[18px] text-[#111827]">
+            Events This Month
+          </CardTitle>
+          <CardDescription className="text-[14px]">
+            Upcoming and past items for {monthName}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <EventsList
@@ -275,11 +295,14 @@ function CalendarGrid({
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
       {/* Header */}
-      <div className="bg-muted/50 grid grid-cols-7 border-b">
+      <div className="grid grid-cols-7 border-b border-[#E5E7EB] bg-[#F9FAFB]">
         {weekDays.map((d) => (
-          <div key={d} className="text-muted-foreground px-2 py-2 text-center text-xs font-medium">
+          <div
+            key={d}
+            className="py-3 text-center text-[12px] font-semibold tracking-wide text-[#6B7280] uppercase"
+          >
             {d}
           </div>
         ))}
@@ -289,7 +312,12 @@ function CalendarGrid({
       <div className="grid grid-cols-7">
         {days.map((cell, i) => {
           if (cell.date === null) {
-            return <div key={i} className="h-20 border-r border-b last:border-r-0" />;
+            return (
+              <div
+                key={i}
+                className="min-h-[100px] border-r border-b border-[#E5E7EB] bg-[#F9FAFB]/50 last:border-r-0 xl:min-h-[120px]"
+              />
+            );
           }
 
           const dayEvents = getEventsForDate(cell.dateStr);
@@ -298,35 +326,34 @@ function CalendarGrid({
           return (
             <div
               key={i}
-              className={`h-20 border-r border-b p-1 last:border-r-0 ${
-                isWeekend ? 'bg-muted/30' : ''
-              } ${cell.isToday ? 'bg-primary/5 ring-primary/30 ring-1 ring-inset' : ''}`}
+              className={`flex min-h-[100px] flex-col gap-1.5 border-r border-b border-[#E5E7EB] p-2 transition-colors last:border-r-0 hover:bg-[#F9FAFB] xl:min-h-[120px] ${
+                isWeekend ? 'bg-[#F9FAFB]/80' : 'bg-white'
+              } ${cell.isToday ? 'bg-[#E8F5EB]/30 ring-2 ring-[#2D8C3E]/20 ring-inset' : ''}`}
             >
               <p
-                className={`text-xs ${
-                  cell.isToday ? 'text-primary font-bold' : isWeekend ? 'text-muted-foreground' : ''
+                className={`mr-1 self-end text-[13px] font-medium ${
+                  cell.isToday
+                    ? 'font-bold text-[#2D8C3E]'
+                    : isWeekend
+                      ? 'text-[#9CA3AF]'
+                      : 'text-[#374151]'
                 }`}
               >
                 {cell.date}
               </p>
-              <div className="mt-0.5 space-y-0.5">
-                {dayEvents.slice(0, 2).map((evt) => {
+              <div className="custom-scrollbar flex-1 space-y-1.5">
+                {dayEvents.map((evt) => {
                   const config = EVENT_TYPES[evt.type as EventType] || EVENT_TYPES.general;
                   return (
                     <div
                       key={evt._id}
-                      className={`truncate rounded px-1 py-0.5 text-[10px] leading-tight ${config.color}`}
+                      className={`truncate rounded-md px-2 py-1 text-[11px] leading-tight font-medium ${config.color}`}
                       title={evt.title}
                     >
                       {evt.title}
                     </div>
                   );
                 })}
-                {dayEvents.length > 2 && (
-                  <p className="text-muted-foreground pl-1 text-[10px]">
-                    +{dayEvents.length - 2} more
-                  </p>
-                )}
               </div>
             </div>
           );
@@ -357,42 +384,53 @@ function EventsList({
   const monthEvents = events.filter((e) => e.startDate <= lastDay && e.endDate >= firstDay);
 
   if (monthEvents.length === 0) {
-    return <p className="text-muted-foreground text-sm">No events this month.</p>;
+    return <p className="py-6 text-center text-[14px] text-[#6B7280]">No events this month.</p>;
   }
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('en-ZM', { day: 'numeric', month: 'short' });
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {monthEvents.map((event) => {
         const config = EVENT_TYPES[event.type as EventType] || EVENT_TYPES.general;
         return (
           <div
             key={event._id}
-            className="flex items-center justify-between rounded-md border px-3 py-2"
+            className="flex items-center justify-between rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 shadow-sm transition-all hover:border-[#D1D5DB]"
           >
-            <div className="flex items-center gap-3">
-              <div className={`h-2.5 w-2.5 rounded-full ${config.dot}`} />
+            <div className="flex items-center gap-4">
+              <div className={`h-3 w-3 shrink-0 rounded-full ${config.dot}`} />
               <div>
-                <p className="text-sm font-medium">{event.title}</p>
-                <p className="text-muted-foreground text-xs">
+                <p className="text-[14px] font-semibold text-[#111827]">{event.title}</p>
+                <p className="text-[13px] text-[#6B7280]">
                   {formatDate(event.startDate)}
                   {event.startDate !== event.endDate && ` — ${formatDate(event.endDate)}`}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className={`text-xs ${config.color}`}>
+            <div className="flex items-center gap-3">
+              <Badge
+                variant="outline"
+                className={`border-none px-2 py-0.5 text-xs font-medium ${config.color}`}
+              >
                 {config.label}
               </Badge>
               {event.affectsAttendance && (
-                <Badge variant="outline" className="text-xs">
+                <Badge
+                  variant="outline"
+                  className="border-none bg-[#F3F4F6] px-2 py-0.5 text-xs font-medium text-[#4B5563]"
+                >
                   No Attendance
                 </Badge>
               )}
-              <Button size="icon-sm" variant="ghost" onClick={() => onDelete(event._id)}>
-                <Trash2 className="h-3 w-3" />
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => onDelete(event._id)}
+                className="text-[#9CA3AF] hover:bg-[#FEF2F2] hover:text-[#DC2626]"
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -451,17 +489,21 @@ function CreateEventDialog({
   };
 
   return (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="gap-6 p-6 sm:max-w-md">
       <form onSubmit={handleSubmit}>
-        <DialogHeader>
-          <DialogTitle>Add School Event</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="font-heading text-xl text-[#111827]">
+            Add School Event
+          </DialogTitle>
+          <DialogDescription className="text-[14px] text-[#6B7280]">
             Add a holiday, closure, exam period, or custom event to the calendar.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+        <div className="space-y-5 py-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="title" className="text-[14px] font-medium text-[#374151]">
+              Title
+            </Label>
             <Input
               id="title"
               value={form.title}
@@ -471,13 +513,15 @@ function CreateEventDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="type" className="text-[14px] font-medium text-[#374151]">
+              Type
+            </Label>
             <select
               id="type"
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value as EventType })}
-              className="border-input bg-background ring-offset-background flex h-9 w-full rounded-md border px-3 py-1 text-sm"
+              className="flex h-10 w-full rounded-md border-[1.5px] border-[#E5E7EB] bg-white px-3 py-2 text-[14px] text-[#111827] transition-all outline-none focus:border-[#2D8C3E] focus:shadow-[0_0_0_3px_rgba(45,140,62,0.15)] focus:ring-0"
             >
               {Object.entries(EVENT_TYPES).map(([key, config]) => (
                 <option key={key} value={key}>
@@ -487,9 +531,11 @@ function CreateEventDialog({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="eventStartDate">Start Date</Label>
+          <div className="grid grid-cols-2 gap-5">
+            <div className="space-y-2.5">
+              <Label htmlFor="eventStartDate" className="text-[14px] font-medium text-[#374151]">
+                Start Date
+              </Label>
               <Input
                 id="eventStartDate"
                 type="date"
@@ -498,8 +544,10 @@ function CreateEventDialog({
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="eventEndDate">End Date</Label>
+            <div className="space-y-2.5">
+              <Label htmlFor="eventEndDate" className="text-[14px] font-medium text-[#374151]">
+                End Date
+              </Label>
               <Input
                 id="eventEndDate"
                 type="date"
@@ -509,8 +557,10 @@ function CreateEventDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="description" className="text-[14px] font-medium text-[#374151]">
+              Description (optional)
+            </Label>
             <Input
               id="description"
               value={form.description}
@@ -519,29 +569,36 @@ function CreateEventDialog({
             />
           </div>
 
-          <div className="flex flex-col gap-3">
-            <label className="flex items-center gap-2 text-sm">
+          <div className="flex flex-col gap-4 pt-2">
+            <label className="group flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={form.affectsAttendance}
                 onChange={(e) => setForm({ ...form, affectsAttendance: e.target.checked })}
-                className="h-4 w-4 rounded border"
+                className="h-[18px] w-[18px] cursor-pointer rounded-[4px] border-[1.5px] border-[#D1D5DB] text-[#2D8C3E] transition-all group-hover:border-[#2D8C3E] focus:ring-[#2D8C3E]/20"
               />
-              Affects attendance (no attendance required on this day)
+              <span className="text-[14px] text-[#374151] select-none">
+                Affects attendance (no attendance required on this day)
+              </span>
             </label>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="group flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={form.visibleToParents}
                 onChange={(e) => setForm({ ...form, visibleToParents: e.target.checked })}
-                className="h-4 w-4 rounded border"
+                className="h-[18px] w-[18px] cursor-pointer rounded-[4px] border-[1.5px] border-[#D1D5DB] text-[#2D8C3E] transition-all group-hover:border-[#2D8C3E] focus:ring-[#2D8C3E]/20"
               />
-              Visible to parents on the portal
+              <span className="text-[14px] text-[#374151] select-none">
+                Visible to parents on the portal
+              </span>
             </label>
           </div>
         </div>
-        <DialogFooter>
-          <Button type="submit" disabled={loading}>
+        <DialogFooter className="border-t border-[#E5E7EB] pt-6 pb-2">
+          <Button type="button" variant="outline" size="modal" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" size="modal" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Event
           </Button>

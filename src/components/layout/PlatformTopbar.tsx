@@ -1,12 +1,10 @@
 'use client';
 
-import { Link } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Shield } from 'lucide-react';
 
 export function PlatformTopbar() {
   return (
-    <header className="bg-background border-border flex h-14 items-center gap-4 border-b px-4 md:px-6">
+    <header className="bg-background border-border z-20 flex h-16 items-center gap-4 border-b px-4 md:px-8">
       <div className="flex flex-1 items-center gap-4">
         <h1 className="text-sm font-semibold">EduZambia Platform Control</h1>
       </div>

@@ -3,11 +3,10 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useMe } from '@/hooks/useMe';
 import { usePermission } from '@/hooks/usePermission';
 import { platformNavConfig, platformSettingsNavConfig } from '@/lib/navigation/platformNavConfig';
 import type { NavItem } from '@/lib/navigation/adminNavConfig';
-import { ChevronLeft, LogOut, Shield } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LogOut, Shield } from 'lucide-react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -16,115 +15,100 @@ import { Separator } from '@/components/ui/separator';
 
 export function PlatformSidebar() {
   const pathname = usePathname();
-  const me = useMe();
   const { signOut } = useAuthActions();
   const [collapsed, setCollapsed] = useState(false);
 
-  const user = me?.user;
-
   return (
-    <aside
-      role="navigation"
+    <div
       className={cn(
-        'flex flex-col border-r border-slate-800 bg-slate-900 text-slate-100 transition-all duration-200',
-        collapsed ? 'w-16' : 'w-64',
+        'relative h-full shrink-0 transition-all duration-300',
+        collapsed ? 'w-0' : 'w-[240px]',
       )}
     >
-      {/* Platform Logo */}
-      <div className="flex items-center gap-3 p-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-600 font-bold text-white">
-          <Shield className="h-4 w-4" />
-        </div>
-        {!collapsed && (
+      <aside
+        role="navigation"
+        className={cn(
+          'absolute inset-y-0 left-0 z-30 flex w-[240px] flex-col text-white transition-transform duration-300',
+          'bg-linear-to-br from-[#2D8C3E] to-[#236B30]',
+          collapsed ? '-translate-x-full' : 'translate-x-0',
+        )}
+      >
+        {/* Platform Logo */}
+        <div className="flex h-16 shrink-0 items-center gap-3 px-4">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/20 font-bold text-white">
+            <Shield className="h-4 w-4" />
+          </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">EduZambia Platform</p>
-            <p className="truncate text-xs text-slate-400">Super Admin</p>
+            <p className="truncate text-sm font-semibold text-white">EduZambia Platform</p>
+            <p className="truncate text-xs text-white/80">Super Admin</p>
           </div>
-        )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto h-7 w-7 shrink-0 text-white/80 hover:bg-white/10 hover:text-white"
+            onClick={() => setCollapsed(true)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <Separator className="bg-white/20" />
+
+        {/* Main Nav */}
+        <nav className="sidebar-scroll flex-1 space-y-1 overflow-y-auto p-2">
+          {platformNavConfig.map((item) => (
+            <NavLink key={item.href} item={item} pathname={pathname} />
+          ))}
+
+          <Separator className="my-2 bg-white/20" />
+
+          <div className="py-2">
+            <p className="px-3 pb-2 text-[10px] font-semibold tracking-wider text-white/50 uppercase">
+              Settings
+            </p>
+            {platformSettingsNavConfig.map((item) => (
+              <NavLink key={item.href} item={item} pathname={pathname} />
+            ))}
+          </div>
+        </nav>
+
+        <Separator className="bg-white/20" />
+
+        {/* Sign Out */}
+        <div className="p-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-white/80 hover:bg-white/10 hover:text-white"
+            onClick={() => void signOut()}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="ml-2">Sign Out</span>
+          </Button>
+        </div>
+      </aside>
+
+      {/* Floating Expand Button */}
+      {collapsed && (
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className="ml-auto h-7 w-7 shrink-0 text-slate-400 hover:bg-slate-800 hover:text-white"
-          onClick={() => setCollapsed(!collapsed)}
+          className="fixed top-20 left-0 z-40 h-10 w-8 rounded-l-none border-l-0 bg-white text-[#2D8C3E] shadow-md hover:bg-gray-50 hover:text-[#236B30]"
+          onClick={() => setCollapsed(false)}
         >
-          <ChevronLeft className={cn('h-4 w-4 transition-transform', collapsed && 'rotate-180')} />
+          <ChevronRight className="h-5 w-5" />
         </Button>
-      </div>
-
-      <Separator className="bg-slate-800" />
-
-      {/* Main Nav */}
-      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
-        {platformNavConfig.map((item) => (
-          <NavLink key={item.href} item={item} pathname={pathname} collapsed={collapsed} />
-        ))}
-      </nav>
-
-      <Separator className="bg-slate-800" />
-
-      {/* Settings Nav */}
-      <div className="space-y-1 p-2">
-        {platformSettingsNavConfig.map((item) => (
-          <NavLink key={item.href} item={item} pathname={pathname} collapsed={collapsed} />
-        ))}
-      </div>
-
-      <Separator className="bg-slate-800" />
-
-      {/* User Info + Sign Out */}
-      <div className="p-3">
-        {!collapsed && user && (
-          <div className="mb-2 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
-              {(user.name || 'A').charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-200">{user.name || 'Admin'}</p>
-              <Badge
-                variant="secondary"
-                className="border-none bg-blue-900/50 text-[10px] text-blue-200 hover:bg-blue-900/50"
-              >
-                {user.role?.replace('_', ' ') || 'Platform Admin'}
-              </Badge>
-            </div>
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size={collapsed ? 'icon' : 'sm'}
-          className={cn(
-            'w-full text-slate-400 hover:bg-slate-800 hover:text-white',
-            !collapsed && 'justify-start',
-          )}
-          onClick={() => void signOut()}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Sign Out</span>}
-        </Button>
-      </div>
-    </aside>
+      )}
+    </div>
   );
 }
 
-function NavLink({
-  item,
-  pathname,
-  collapsed,
-}: {
-  item: NavItem;
-  pathname: string;
-  collapsed: boolean;
-}) {
+function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   // Permission gate
-  if (item.requiredPermission) {
-    const allowed = usePermission(item.requiredPermission);
-    if (!allowed) return null;
-  }
+  const allowed = usePermission(item.requiredPermission);
+  if (!allowed) return null;
 
   const Icon = item.icon;
-  // Ensure we highlight correctly for platform routes. Assuming platform is hosted on a subdomain but accessed directly,
-  // or it shares the same app/ structure. Wait, `(platform)` means it's available at root, but middleware routes it.
-  // Actually, in `(platform)/schools/new`, the path is `/schools/new`.
   const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
   return (
@@ -133,22 +117,22 @@ function NavLink({
       className={cn(
         'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
         isActive
-          ? 'bg-blue-600 font-medium text-white'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white',
-        collapsed && 'justify-center px-2',
+          ? 'bg-white/20 font-medium text-white'
+          : 'text-white/80 hover:bg-white/10 hover:text-white',
       )}
-      title={collapsed ? item.label : undefined}
     >
       <Icon className="h-4 w-4 shrink-0" />
-      {!collapsed && (
-        <>
-          <span className="flex-1">{item.label}</span>
-          {item.badge && (
-            <Badge variant={item.badge === 'new' ? 'default' : 'secondary'} className="text-[10px]">
-              {item.badge}
-            </Badge>
+      <span className="flex-1">{item.label}</span>
+      {item.badge && (
+        <Badge
+          variant={item.badge === 'new' ? 'default' : 'secondary'}
+          className={cn(
+            'text-[10px]',
+            item.badge !== 'new' && 'border-transparent bg-white/20 text-white hover:bg-white/30',
           )}
-        </>
+        >
+          {item.badge}
+        </Badge>
       )}
     </Link>
   );

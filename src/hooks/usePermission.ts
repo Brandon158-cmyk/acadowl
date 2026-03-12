@@ -15,8 +15,9 @@ import { useMe } from '@/hooks/useMe';
 /**
  * Check a single permission for the current user.
  */
-export function usePermission(permission: Permission): boolean {
+export function usePermission(permission?: Permission): boolean {
   const me = useMe();
+  if (!permission) return true;
   if (!me?.user?.role) return false;
   return canDo(me.user.role as Role, permission);
 }

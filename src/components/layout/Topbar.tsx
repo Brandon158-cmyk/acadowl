@@ -33,8 +33,8 @@ export function Topbar({ onToggleMobileNav }: TopbarProps) {
   const canViewSMS = usePermission(Permission.SEND_BULK_SMS);
 
   return (
-    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 border-b backdrop-blur">
-      <div className="flex h-14 items-center gap-4 px-4 md:px-6">
+    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 z-20 border-b backdrop-blur">
+      <div className="flex h-16 items-center gap-4 px-4 md:px-8">
         {/* Mobile hamburger */}
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleMobileNav}>
           <Menu className="h-5 w-5" />

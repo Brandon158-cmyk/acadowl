@@ -46,22 +46,29 @@ export const adminNavConfig: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: 'Students',
-    href: '/students',
-    icon: GraduationCap,
-    requiredPermission: Permission.VIEW_STUDENTS,
-  },
-  {
-    label: 'Staff',
-    href: '/staff',
-    icon: Users,
-    requiredPermission: Permission.VIEW_STAFF,
-  },
-  {
-    label: 'Attendance',
-    href: '/attendance',
-    icon: ClipboardList,
-    requiredPermission: Permission.VIEW_ATTENDANCE,
+    label: 'Administration',
+    href: '#admin',
+    icon: Building,
+    children: [
+      {
+        label: 'Students',
+        href: '/students',
+        icon: GraduationCap,
+        requiredPermission: Permission.VIEW_STUDENTS,
+      },
+      {
+        label: 'Staff',
+        href: '/staff',
+        icon: Users,
+        requiredPermission: Permission.VIEW_STAFF,
+      },
+      {
+        label: 'Attendance',
+        href: '/attendance',
+        icon: ClipboardList,
+        requiredPermission: Permission.VIEW_ATTENDANCE,
+      },
+    ],
   },
   {
     label: 'Academics',
@@ -90,96 +97,117 @@ export const adminNavConfig: NavItem[] = [
         href: '/academics/homework',
         icon: BookOpen,
       },
+      {
+        label: 'Exams',
+        href: '/exams',
+        icon: FileText,
+        requiredPermission: Permission.VIEW_ALL_RESULTS,
+      },
+      {
+        label: 'LMS',
+        href: '/lms',
+        icon: MonitorPlay,
+        requiredFeature: Feature.LMS,
+        requiredPermission: Permission.CREATE_COURSE,
+      },
     ],
   },
   {
-    label: 'Exams',
-    href: '/exams',
-    icon: FileText,
-    requiredPermission: Permission.VIEW_ALL_RESULTS,
-  },
-  {
-    label: 'Fees & Finance',
-    href: '/fees',
-    icon: DollarSign,
-    requiredPermission: Permission.VIEW_FINANCE_REPORTS,
-  },
-  {
-    label: 'Boarding',
-    href: '/boarding',
+    label: 'Facilities',
+    href: '#facilities',
     icon: Building,
-    requiredFeature: Feature.BOARDING,
-    requiredPermission: Permission.MANAGE_HOSTELS,
+    children: [
+      {
+        label: 'Boarding',
+        href: '/boarding',
+        icon: Building,
+        requiredFeature: Feature.BOARDING,
+        requiredPermission: Permission.MANAGE_HOSTELS,
+      },
+      {
+        label: 'Transport',
+        href: '/transport',
+        icon: Bus,
+        requiredFeature: Feature.TRANSPORT,
+        requiredPermission: Permission.MANAGE_ROUTES,
+      },
+      {
+        label: 'Library',
+        href: '/library',
+        icon: Library,
+        requiredFeature: Feature.LIBRARY,
+        requiredPermission: Permission.MANAGE_LIBRARY_CATALOG,
+      },
+    ],
   },
   {
-    label: 'Transport',
-    href: '/transport',
-    icon: Bus,
-    requiredFeature: Feature.TRANSPORT,
-    requiredPermission: Permission.MANAGE_ROUTES,
-  },
-  {
-    label: 'Library',
-    href: '/library',
-    icon: Library,
-    requiredFeature: Feature.LIBRARY,
-    requiredPermission: Permission.MANAGE_LIBRARY_CATALOG,
-  },
-  {
-    label: 'LMS',
-    href: '/lms',
-    icon: MonitorPlay,
-    requiredFeature: Feature.LMS,
-    requiredPermission: Permission.CREATE_COURSE,
-  },
-  {
-    label: 'Reports',
-    href: '/reports',
+    label: 'Finance & Analytics',
+    href: '#analytics',
     icon: BarChart3,
-    requiredPermission: Permission.VIEW_SCHOOL_ANALYTICS,
+    children: [
+      {
+        label: 'Fees & Finance',
+        href: '/fees',
+        icon: DollarSign,
+        requiredPermission: Permission.VIEW_FINANCE_REPORTS,
+      },
+      {
+        label: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+        requiredPermission: Permission.VIEW_SCHOOL_ANALYTICS,
+      },
+    ],
   },
   {
     label: 'Notifications',
     href: '/notifications',
     icon: Bell,
   },
-];
-
-export const adminSettingsNavConfig: NavItem[] = [
-  {
-    label: 'Academic Year',
-    href: '/settings/academic-year',
-    icon: Calendar,
-    requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
-  },
-  {
-    label: 'School Calendar',
-    href: '/settings/calendar',
-    icon: CalendarDays,
-    requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
-  },
-  {
-    label: 'Branding',
-    href: '/settings/branding',
-    icon: Palette,
-    requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
-  },
-  {
-    label: 'Features',
-    href: '/settings/features',
-    icon: ToggleRight,
-    requiredPermission: Permission.MANAGE_FEATURE_FLAGS,
-  },
-  {
-    label: 'User Management',
-    href: '/settings/users',
-    icon: UserCog,
-    requiredPermission: Permission.MANAGE_USERS,
-  },
   {
     label: 'Settings',
-    href: '/settings',
+    href: '#settings',
     icon: Settings,
-    requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+    children: [
+      {
+        label: 'Academic Year',
+        href: '/settings/academic-year',
+        icon: Calendar,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+      },
+      {
+        label: 'School Calendar',
+        href: '/settings/calendar',
+        icon: CalendarDays,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+      },
+      {
+        label: 'Branding',
+        href: '/settings/branding',
+        icon: Palette,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+      },
+      {
+        label: 'Features',
+        href: '/settings/features',
+        icon: ToggleRight,
+        requiredPermission: Permission.MANAGE_FEATURE_FLAGS,
+      },
+      {
+        label: 'User Management',
+        href: '/settings/users',
+        icon: UserCog,
+        requiredPermission: Permission.MANAGE_USERS,
+      },
+      {
+        label: 'General Settings',
+        href: '/settings',
+        icon: Settings,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+      },
+    ],
   },
 ];
+
+// Deprecated since we merged everything into adminNavConfig
+export const adminSettingsNavConfig: NavItem[] = [];
