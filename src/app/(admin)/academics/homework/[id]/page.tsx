@@ -74,10 +74,15 @@ function toDateTimeLocal(ts: number): string {
  */
 function sanitizeResources(
   resources: HomeworkResource[],
-): Array<{ title: string; type: string; url?: string; storageId?: Id<'_storage'> }> {
+): Array<{
+  title: string;
+  type: 'link' | 'text' | 'pdf' | 'file';
+  url?: string;
+  storageId?: Id<'_storage'>;
+}> {
   return resources.map(({ title, type, url, storageId }) => ({
     title,
-    type: type || 'file',
+    type: (type as 'link' | 'text' | 'pdf' | 'file') || 'file',
     ...(url != null ? { url } : {}),
     ...(storageId ? { storageId } : {}),
   }));
@@ -178,7 +183,7 @@ export default function HomeworkEditorPage() {
       const { storageId } = await result.json();
 
       const newResource = {
-        type: 'file',
+        type: 'file' as const,
         title: file.name,
         storageId: storageId as Id<'_storage'>,
       };

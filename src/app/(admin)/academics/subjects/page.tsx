@@ -55,11 +55,11 @@ export default function SubjectsPage() {
     setIsSeedLoading(true);
     try {
       const result = await seedSubjects();
-      if (result && 'created' in result && result.created > 0) {
+      if (result && result.created > 0) {
         toast.success(`Successfully imported ${result.created} MoE subject(s)`);
-      } else if (result && 'message' in result && result.message) {
+      } else if (result && result.message) {
         toast.info(result.message);
-      } else if (result && 'created' in result && result.created === 0) {
+      } else if (result && result.created === 0) {
         toast.info('All default subjects are already present — nothing to import.');
       } else {
         toast.success('Successfully imported MoE subjects');

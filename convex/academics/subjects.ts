@@ -194,7 +194,8 @@ export const seedDefaultSubjects = mutation({
         '— aborting seed.',
       );
       return {
-        seeded: 0,
+        created: 0,
+        skipped: 0,
         message: 'No grades configured. Please add grades before seeding subjects.',
       };
     }
