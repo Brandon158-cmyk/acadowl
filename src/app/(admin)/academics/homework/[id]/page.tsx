@@ -201,15 +201,19 @@ export default function HomeworkEditorPage() {
 
   const handleRemoveResource = async (index: number) => {
     if (!formData) return;
+    const previousResources = formData.resources;
     const updatedResources = [...formData.resources];
     updatedResources.splice(index, 1);
+    // Optimistic update
+    setFormData({ ...formData, resources: updatedResources });
     try {
       await updateHomework({
         id: homeworkId,
         resources: sanitizeResources(updatedResources),
       });
-      setFormData({ ...formData, resources: updatedResources });
     } catch {
+      // Roll back on failure
+      setFormData({ ...formData, resources: previousResources });
       toast.error('Failed to remove resource');
     }
   };

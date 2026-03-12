@@ -23,6 +23,7 @@ import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
 import type * as debugAuth from "../debugAuth.js";
 import type * as http from "../http.js";
+import type * as migrations_backfillHomeworkSchoolId from "../migrations/backfillHomeworkSchoolId.js";
 import type * as notifications_queries from "../notifications/queries.js";
 import type * as platformAdmin from "../platformAdmin.js";
 import type * as schools_academicYears from "../schools/academicYears.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   debugAuth: typeof debugAuth;
   http: typeof http;
+  "migrations/backfillHomeworkSchoolId": typeof migrations_backfillHomeworkSchoolId;
   "notifications/queries": typeof notifications_queries;
   platformAdmin: typeof platformAdmin;
   "schools/academicYears": typeof schools_academicYears;

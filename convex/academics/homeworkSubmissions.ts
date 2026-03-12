@@ -26,7 +26,7 @@ export const submitHomeworkWithStudent = mutation({
 
     // Check if homework exists and belongs to school
     const hw = await ctx.db.get(args.homeworkId);
-    if (!hw || hw.schoolId !== school._id) throw new Error('Homework not found');
+    if (!hw || hw.schoolId !== school._id) throwEduError(EduError.NOT_FOUND, 'Homework not found');
 
     // Check if already submitted
     const existing = await ctx.db
@@ -77,23 +77,19 @@ export const gradeSubmission = mutation({
 
     // Fetch submission; verify it belongs to the caller's school
     const submission = await ctx.db.get(args.submissionId);
-    if (!submission) {
-      throwEduError(EduError.NOT_FOUND, 'Submission not found.');
-    }
-    if (submission!.schoolId !== school._id) {
+    if (!submission) throwEduError(EduError.NOT_FOUND, 'Submission not found.');
+    if (submission.schoolId !== school._id) {
       throwEduError(EduError.FORBIDDEN, 'You do not have permission to grade this submission.');
     }
 
     // Fetch related homework to get totalPoints for bounds check
-    const homework = await ctx.db.get(submission!.homeworkId);
-    if (!homework) {
-      throwEduError(EduError.NOT_FOUND, 'Related homework not found.');
-    }
+    const homework = await ctx.db.get(submission.homeworkId);
+    if (!homework) throwEduError(EduError.NOT_FOUND, 'Related homework not found.');
 
     // Validate grade is within bounds
-    const maxPoints = homework!.totalPoints ?? 100;
+    const maxPoints = homework.totalPoints ?? 100;
     if (args.grade < 0 || args.grade > maxPoints) {
-      throwEduError(EduError.FORBIDDEN, `Grade must be between 0 and ${maxPoints}.`);
+      throwEduError(EduError.VALIDATION_ERROR, `Grade must be between 0 and ${maxPoints}.`);
     }
 
     await ctx.db.patch(args.submissionId, {

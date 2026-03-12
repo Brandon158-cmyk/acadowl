@@ -42,9 +42,13 @@ interface LessonPlanFormData {
 export default function LessonPlanEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const unwrappedParams = use(params);
-  const planId = unwrappedParams.id as Id<'lessonPlans'>;
+  // Keep the raw string param; Convex returns null for non-existent IDs so
+  // invalid-but-well-formed strings still show the "not found" state gracefully.
+  // We skip the query entirely for an empty string to avoid a confusing error.
+  const rawId = unwrappedParams.id;
+  const planId = rawId as Id<'lessonPlans'>;
 
-  const plan = useQuery(api.academics.lessonPlans.getPlanById, { id: planId });
+  const plan = useQuery(api.academics.lessonPlans.getPlanById, rawId ? { id: planId } : 'skip');
   const updatePlan = useMutation(api.academics.lessonPlans.updatePlan);
   const generateUploadUrl = useMutation(api.academics.lessonPlans.generateUploadUrl);
 

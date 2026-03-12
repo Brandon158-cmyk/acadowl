@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from '../_generated/server';
 import { getAuthenticatedUserAndSchool } from '../_lib/schoolContext';
+import { requireRole } from '../_lib/permissions';
 import { EduError, throwEduError } from '../_lib/errors';
 import { Doc } from '../_generated/dataModel';
 
@@ -26,16 +27,20 @@ export const createPlan = mutation({
     visibility: v.union(v.literal('private'), v.literal('school')),
   },
   handler: async (ctx, args) => {
-    const { school, user } = await getAuthenticatedUserAndSchool(ctx);
+    // Allow school/platform admins and all teaching roles to create lesson plans.
+    const { school, user } = await requireRole(ctx, [
+      'platform_admin',
+      'school_admin',
+      'deputy_head',
+      'teacher',
+      'class_teacher',
+    ]);
 
+    // Fetch the staff record for the author field (may be absent for admin-created plans).
     const staff = await ctx.db
       .query('staff')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .first();
-
-    if (!staff || staff.schoolId !== school._id) {
-      throwEduError(EduError.FORBIDDEN, 'Only teaching staff can create lesson plans.');
-    }
 
     // Verify subjectId belongs to caller's school
     const subject = await ctx.db.get(args.subjectId);
@@ -51,7 +56,8 @@ export const createPlan = mutation({
 
     return await ctx.db.insert('lessonPlans', {
       schoolId: school._id,
-      staffId: staff._id,
+      // staffId is undefined for admin-created plans that have no staff record.
+      staffId: staff?.schoolId === school._id ? staff._id : undefined,
       subjectId: args.subjectId,
       gradeId: args.gradeId,
       title: args.title,
@@ -98,13 +104,16 @@ export const updatePlan = mutation({
       throwEduError(EduError.NOT_FOUND, 'Lesson plan not found.');
     }
 
+    const isAdmin = user.role === 'school_admin' || user.role === 'platform_admin';
+
     const staff = await ctx.db
       .query('staff')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .first();
 
-    if (!staff || staff._id !== plan.staffId) {
-      // Must be owner to edit
+    // Admins can edit any plan in their school; staff can only edit their own.
+    const isOwner = staff && staff._id === plan.staffId;
+    if (!isAdmin && !isOwner) {
       throwEduError(EduError.FORBIDDEN, 'You do not have permission to edit this lesson plan.');
     }
 
@@ -169,7 +178,12 @@ export const getStorageUrls = query({
   handler: async (ctx, args) => {
     const { school } = await getAuthenticatedUserAndSchool(ctx);
 
-    // Build a set of storage IDs that are referenced by lesson plans owned by this school
+    // Build a lookup set of the requested IDs for O(1) membership checks.
+    const requestedSet = new Set<string>(args.storageIds);
+
+    // Scope to this school via the index, then collect only the storage IDs we
+    // care about in a single pass.  We intentionally skip adding a storageId
+    // that isn't in requestedSet so the ownedStorageIds set stays small.
     const ownedStorageIds = new Set<string>();
     const plans = await ctx.db
       .query('lessonPlans')
@@ -177,7 +191,9 @@ export const getStorageUrls = query({
       .collect();
     for (const plan of plans) {
       for (const resource of plan.resources) {
-        if (resource.storageId) ownedStorageIds.add(resource.storageId);
+        if (resource.storageId && requestedSet.has(resource.storageId)) {
+          ownedStorageIds.add(resource.storageId);
+        }
       }
     }
 
@@ -189,7 +205,7 @@ export const getStorageUrls = query({
       }),
     );
 
-    // Convert array of objects to Map-like object
+    // Convert to a Record for convenient key-based lookups on the client
     return urls.reduce(
       (acc, curr) => {
         acc[curr.storageId] = curr.url;

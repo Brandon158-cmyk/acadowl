@@ -798,7 +798,7 @@ const schema = defineSchema({
   // ── LESSON PLANS (Sprint 01 — ISSUE-046) ──
   lessonPlans: defineTable({
     schoolId: v.id('schools'),
-    staffId: v.id('staff'),
+    staffId: v.optional(v.id('staff')), // undefined for admin-created plans
     subjectId: v.id('subjects'),
     gradeId: v.id('grades'),
     title: v.string(),
@@ -911,7 +911,7 @@ const schema = defineSchema({
     .index('by_school', ['schoolId'])
     .index('by_subject', ['subjectId'])
     .index('by_grade', ['gradeId'])
-    .index('by_status', ['status']),
+    .index('by_status', ['schoolId', 'status']),
 
   homeworkSubmissions: defineTable({
     homeworkId: v.id('homework'),

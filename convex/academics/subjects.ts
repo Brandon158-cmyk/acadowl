@@ -127,7 +127,6 @@ export const getSubjectsByGrade = query({
   },
   handler: async (ctx, args) => {
     const { school } = await getAuthenticatedUserAndSchool(ctx);
-    if (!school) return [];
 
     const allSubjects = await ctx.db
       .query('subjects')
@@ -142,7 +141,6 @@ export const getSubjectsBySchool = query({
   args: {},
   handler: async (ctx) => {
     const { school } = await getAuthenticatedUserAndSchool(ctx);
-    if (!school) return [];
 
     return await ctx.db
       .query('subjects')

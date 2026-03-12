@@ -175,11 +175,19 @@ export default function SubjectsPage() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select grades..." />
+                      <SelectValue placeholder="Select grades...">
+                        {newSubject.gradeIds.length === 0
+                          ? 'Select grades…'
+                          : newSubject.gradeIds.length === 1
+                            ? (grades.find((g) => g._id === newSubject.gradeIds[0])?.name ??
+                              '1 grade selected')
+                            : `${newSubject.gradeIds.length} grades selected`}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {grades.map((g) => (
                         <SelectItem key={g._id} value={g._id}>
+                          {newSubject.gradeIds.includes(g._id) ? '✓ ' : ''}
                           {g.name}
                         </SelectItem>
                       ))}
