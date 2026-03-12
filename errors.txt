@@ -1,0 +1,40 @@
+src/app/(admin)/academics/grades/page.tsx(110,28): error TS2322: Type '{ children: Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & Props<unknown>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & Props<unknown>'.
+src/app/(admin)/academics/lesson-plans/[id]/page.tsx(177,47): error TS2322: Type '{ children: Element; variant: "ghost"; size: "icon"; asChild: true; }' is not assignable to type 'IntrinsicAttributes & ButtonProps & VariantProps<(props?: (ConfigVariants<{ variant: { default: string; outline: string; secondary: string; ghost: string; destructive: string; link: string; }; size: { ...; }; }> & ClassProp) | undefined) => string>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & ButtonProps & VariantProps<(props?: (ConfigVariants<{ variant: { default: string; outline: string; secondary: string; ghost: string; destructive: string; link: string; }; size: { ...; }; }> & ClassProp) | undefined) => string>'.
+src/app/(admin)/academics/lesson-plans/create/page.tsx(61,45): error TS2322: Type '{ children: Element; variant: "ghost"; size: "icon"; asChild: true; }' is not assignable to type 'IntrinsicAttributes & ButtonProps & VariantProps<(props?: (ConfigVariants<{ variant: { default: string; outline: string; secondary: string; ghost: string; destructive: string; link: string; }; size: { ...; }; }> & ClassProp) | undefined) => string>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & ButtonProps & VariantProps<(props?: (ConfigVariants<{ variant: { default: string; outline: string; secondary: string; ghost: string; destructive: string; link: string; }; size: { ...; }; }> & ClassProp) | undefined) => string>'.
+src/app/(admin)/academics/lesson-plans/create/page.tsx(87,41): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/app/(admin)/academics/lesson-plans/create/page.tsx(102,39): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/app/(admin)/academics/lesson-plans/create/page.tsx(118,53): error TS2322: Type '{ children: Element; variant: "outline"; type: "button"; asChild: true; }' is not assignable to type 'IntrinsicAttributes & ButtonProps & VariantProps<(props?: (ConfigVariants<{ variant: { default: string; outline: string; secondary: string; ghost: string; destructive: string; link: string; }; size: { ...; }; }> & ClassProp) | undefined) => string>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & ButtonProps & VariantProps<(props?: (ConfigVariants<{ variant: { default: string; outline: string; secondary: string; ghost: string; destructive: string; link: string; }; size: { ...; }; }> & ClassProp) | undefined) => string>'.
+src/app/(admin)/academics/lesson-plans/page.tsx(66,45): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/app/(admin)/academics/lesson-plans/page.tsx(80,43): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/app/(admin)/academics/subjects/page.tsx(117,28): error TS2322: Type '{ children: Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & Props<unknown>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & Props<unknown>'.
+src/app/(admin)/academics/subjects/page.tsx(161,37): error TS2345: Argument of type '(prev: { name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; gradeIds: string[]; }) => { gradeIds: unknown[]; name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; }' is not assignable to parameter of type 'SetStateAction<{ name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; gradeIds: string[]; }>'.
+  Type '(prev: { name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; gradeIds: string[]; }) => { gradeIds: unknown[]; name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; }' is not assignable to type '(prevState: { name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; gradeIds: string[]; }) => { name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; gradeIds: string[]; }'.
+    Call signature return types '{ gradeIds: unknown[]; name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; }' and '{ name: string; code: string; isCompulsory: boolean; eczSubjectCode: string; gradeIds: string[]; }' are incompatible.
+      The types of 'gradeIds' are incompatible between these types.
+        Type 'unknown[]' is not assignable to type 'string[]'.
+          Type 'unknown' is not assignable to type 'string'.
+src/app/(admin)/academics/subjects/page.tsx(163,58): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/components/academics/LessonPlanForm.tsx(20,20): error TS2307: Cannot find module '../../../../convex/_generated/dataModel' or its corresponding type declarations.
+src/components/academics/LessonPlanForm.tsx(54,24): error TS2345: Argument of type '{ title: string; subjectId: Id<"subjects">; gradeId: Id<"grades">; syllabusTopicRef: string | undefined; duration: number; visibility: "private" | "school"; learningObjectives: string[]; resources: Resource[]; }' is not assignable to parameter of type '{ content?: string | undefined; syllabusTopicRef?: string | undefined; duration?: number | undefined; status: "draft" | "published"; gradeId: Id<"grades">; subjectId: Id<"subjects">; title: string; learningObjectives: string[]; resources: { ...; }[]; visibility: "private" | "school"; }'.
+  Property 'status' is missing in type '{ title: string; subjectId: Id<"subjects">; gradeId: Id<"grades">; syllabusTopicRef: string | undefined; duration: number; visibility: "private" | "school"; learningObjectives: string[]; resources: Resource[]; }' but required in type '{ content?: string | undefined; syllabusTopicRef?: string | undefined; duration?: number | undefined; status: "draft" | "published"; gradeId: Id<"grades">; subjectId: Id<"subjects">; title: string; learningObjectives: string[]; resources: { ...; }[]; visibility: "private" | "school"; }'.
+src/components/academics/LessonPlanForm.tsx(200,19): error TS2322: Type '(val: "pdf" | "link" | "text") => void' is not assignable to type '(value: "text" | "link" | "pdf" | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'val' and 'value' are incompatible.
+    Type '"text" | "link" | "pdf" | null' is not assignable to type '"text" | "link" | "pdf"'.
+      Type 'null' is not assignable to type '"text" | "link" | "pdf"'.

@@ -14,7 +14,7 @@ import {
 import { Feature } from '@/lib/features/flags';
 import { Permission } from '@/lib/roles/types';
 import { SchoolLogo } from '@/components/school/SchoolLogo';
-import { ChevronLeft, LogOut } from 'lucide-react';
+import { ChevronLeft, LogOut, ChevronDown } from 'lucide-react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -123,14 +123,20 @@ function NavLink({
   item,
   pathname,
   collapsed,
+  isChild = false,
 }: {
   item: NavItem;
   pathname: string;
   collapsed: boolean;
+  isChild?: boolean;
 }) {
   // Unconditional hook calls to obey Rules of Hooks
   const enabled = useFeature(item.requiredFeature as Feature);
   const allowed = usePermission(item.requiredPermission as Permission);
+
+  const isActive =
+    pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'));
+  const [isOpen, setIsOpen] = useState(isActive);
 
   // Feature gate
   if (item.requiredFeature && !enabled) {
@@ -143,24 +149,68 @@ function NavLink({
   }
 
   const Icon = item.icon;
-  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+
+  if (item.children && item.children.length > 0) {
+    return (
+      <div className="space-y-1">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+            isActive
+              ? 'bg-primary/5 text-primary font-medium'
+              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+            collapsed && 'justify-center px-2',
+            isChild && !collapsed && 'pl-9',
+          )}
+          title={collapsed ? item.label : undefined}
+        >
+          <Icon className="h-4 w-4 shrink-0" />
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-left">{item.label}</span>
+              <ChevronDown
+                className={cn('h-4 w-4 shrink-0 transition-transform', isOpen && 'rotate-180')}
+              />
+            </>
+          )}
+        </button>
+        {isOpen && !collapsed && (
+          <div className="space-y-1">
+            {item.children.map((child) => (
+              <NavLink
+                key={child.href}
+                item={child}
+                pathname={pathname}
+                collapsed={collapsed}
+                isChild
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const isExactActive = pathname === item.href;
 
   return (
     <Link
       href={item.href}
       className={cn(
         'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-        isActive
+        isExactActive
           ? 'bg-primary/10 text-primary font-medium'
           : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
         collapsed && 'justify-center px-2',
+        isChild && !collapsed && 'pl-9',
       )}
       title={collapsed ? item.label : undefined}
     >
       <Icon className="h-4 w-4 shrink-0" />
       {!collapsed && (
         <>
-          <span className="flex-1">{item.label}</span>
+          <span className="flex-1 text-left">{item.label}</span>
           {item.badge && (
             <Badge variant={item.badge === 'new' ? 'default' : 'secondary'} className="text-[10px]">
               {item.badge}

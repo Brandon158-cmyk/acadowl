@@ -3,12 +3,14 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { adminNavConfig, type NavItem } from '@/lib/navigation/adminNavConfig';
 import { useFeature } from '@/hooks/useFeature';
 import { usePermission } from '@/hooks/usePermission';
+import { Feature } from '@/lib/features/flags';
+import { Permission } from '@/lib/roles/types';
 
 /**
  * ISSUE-032 · MobileNav Component
@@ -58,22 +60,64 @@ function MobileNavLink({
   item,
   pathname,
   onNavigate,
+  isChild = false,
 }: {
   item: NavItem;
   pathname: string;
   onNavigate: () => void;
+  isChild?: boolean;
 }) {
-  if (item.requiredFeature) {
-    const enabled = useFeature(item.requiredFeature);
-    if (!enabled) return null;
-  }
-  if (item.requiredPermission) {
-    const allowed = usePermission(item.requiredPermission);
-    if (!allowed) return null;
-  }
+  const enabled = useFeature(item.requiredFeature as Feature);
+  const allowed = usePermission(item.requiredPermission as Permission);
+
+  const isActive =
+    pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'));
+  const [isOpen, setIsOpen] = useState(isActive);
+
+  if (item.requiredFeature && !enabled) return null;
+  if (item.requiredPermission && !allowed) return null;
 
   const Icon = item.icon;
-  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+
+  if (item.children && item.children.length > 0) {
+    return (
+      <div className="space-y-1">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            'flex w-full items-center justify-between gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
+            isActive
+              ? 'bg-primary/5 text-primary font-medium'
+              : 'text-muted-foreground hover:bg-accent',
+            isChild && 'pl-9',
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="text-left">{item.label}</span>
+          </div>
+          <ChevronDown
+            className={cn('h-4 w-4 shrink-0 transition-transform', isOpen && 'rotate-180')}
+          />
+        </button>
+        {isOpen && (
+          <div className="space-y-1 py-1">
+            {item.children.map((child) => (
+              <MobileNavLink
+                key={child.href}
+                item={child}
+                pathname={pathname}
+                onNavigate={onNavigate}
+                isChild
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const isExactActive = pathname === item.href;
 
   return (
     <Link
@@ -81,13 +125,14 @@ function MobileNavLink({
       onClick={onNavigate}
       className={cn(
         'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
-        isActive
+        isExactActive
           ? 'bg-primary/10 text-primary font-medium'
           : 'text-muted-foreground hover:bg-accent',
+        isChild && 'pl-9',
       )}
     >
-      <Icon className="h-4 w-4" />
-      {item.label}
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="text-left">{item.label}</span>
     </Link>
   );
 }
