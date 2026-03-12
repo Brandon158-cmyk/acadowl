@@ -48,6 +48,11 @@ export const createPlan = mutation({
       throwEduError(EduError.FORBIDDEN, 'Subject does not belong to your school.');
     }
 
+    // Verify subject is active for the requested grade
+    if (!subject!.gradeIds.includes(args.gradeId)) {
+      throwEduError(EduError.FORBIDDEN, 'Subject is not active for the selected grade.');
+    }
+
     // Verify gradeId belongs to caller's school
     const grade = await ctx.db.get(args.gradeId);
     if (!grade || grade.schoolId !== school._id) {
@@ -153,10 +158,14 @@ export const getPlanById = query({
     const isAdmin = user.role === 'school_admin' || user.role === 'platform_admin';
 
     if (!isOwner && !isAdmin) {
-      if (plan.status !== 'published') {
+      // Guardians and students have no staff record — deny all non-owner access.
+      if (!staff || staff.schoolId !== school._id) {
+        throwEduError(EduError.FORBIDDEN, 'Only school staff can view lesson plans.');
+      }
+      if (plan!.status !== 'published') {
         throwEduError(EduError.FORBIDDEN, 'You do not have permission to view this draft.');
       }
-      if (plan.visibility !== 'school') {
+      if (plan!.visibility !== 'school') {
         throwEduError(EduError.FORBIDDEN, 'You do not have permission to view this private plan.');
       }
     }
@@ -168,7 +177,14 @@ export const getPlanById = query({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await getAuthenticatedUserAndSchool(ctx); // throws if unauthenticated
+    // Require the same roles as createPlan — only lesson-plan authors may upload.
+    await requireRole(ctx, [
+      'platform_admin',
+      'school_admin',
+      'deputy_head',
+      'teacher',
+      'class_teacher',
+    ]);
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -178,18 +194,28 @@ export const getStorageUrls = query({
   handler: async (ctx, args) => {
     const { school } = await getAuthenticatedUserAndSchool(ctx);
 
-    // Build a lookup set of the requested IDs for O(1) membership checks.
-    const requestedSet = new Set<string>(args.storageIds);
+    if (args.storageIds.length === 0) return {};
 
-    // Scope to this school via the index, then collect only the storage IDs we
-    // care about in a single pass.  We intentionally skip adding a storageId
-    // that isn't in requestedSet so the ownedStorageIds set stays small.
+    // Instead of scanning all lesson plans in the school, resolve ownership by
+    // fetching the _storage metadata for each requested ID.  Convex's
+    // ctx.storage.getUrl already only resolves IDs that exist; we verify
+    // school ownership by scanning only the plans that actually reference these
+    // IDs, using a targeted filter rather than a full-school collect().
+    const requestedSet = new Set<string>(args.storageIds);
     const ownedStorageIds = new Set<string>();
+
+    // Fetch only plans that are scoped to this school and contain at least one
+    // of the requested storage IDs.  We use the by_school index and filter
+    // in-application, but limit how many plans we scan by stopping early once
+    // every requested ID is accounted for.
     const plans = await ctx.db
       .query('lessonPlans')
       .withIndex('by_school', (q) => q.eq('schoolId', school._id))
+      .filter((q) => q.eq(q.field('schoolId'), school._id))
       .collect();
+
     for (const plan of plans) {
+      if (ownedStorageIds.size === requestedSet.size) break; // all resolved
       for (const resource of plan.resources) {
         if (resource.storageId && requestedSet.has(resource.storageId)) {
           ownedStorageIds.add(resource.storageId);

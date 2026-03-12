@@ -89,6 +89,18 @@ export const updateSubject = mutation({
       }
     }
 
+    // Enforce unique name within the school (same invariant as createSubject)
+    if (args.name !== undefined && args.name !== subject.name) {
+      const nameConflict = await ctx.db
+        .query('subjects')
+        .withIndex('by_school', (q) => q.eq('schoolId', school._id))
+        .filter((q) => q.eq(q.field('name'), args.name))
+        .first();
+      if (nameConflict && nameConflict._id !== args.id) {
+        throwEduError(EduError.ALREADY_EXISTS, `Subject name "${args.name}" already exists.`);
+      }
+    }
+
     const updates: Partial<Doc<'subjects'>> = {};
     if (args.name !== undefined) updates.name = args.name;
     if (args.code !== undefined) updates.code = args.code;
@@ -161,6 +173,11 @@ export const getSubjectsBySchool = query({
 
 export const seedDefaultSubjects = mutation({
   args: {},
+  returns: v.object({
+    created: v.number(),
+    skipped: v.number(),
+    message: v.optional(v.string()),
+  }),
   handler: async (ctx) => {
     const { school } = await requirePermission(ctx, Permission.MANAGE_SCHOOL_SETTINGS);
 

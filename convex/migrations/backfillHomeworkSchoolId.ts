@@ -19,11 +19,23 @@ export const deleteOrphans = internalMutation({
     do {
       const page = await ctx.db
         .query('homework')
-        .paginate({ numItems: 50, cursor: cursor ?? 'null' });
+        // Pass `null` (not the string "null") so pagination starts from the beginning.
+        .paginate({ numItems: 50, cursor: cursor ?? null });
 
       for (const hw of page.page) {
         if (!('schoolId' in hw) || hw.schoolId == null) {
           console.log(`Deleting orphaned homework: ${hw._id} ("${hw.title}")`);
+
+          // Delete associated submissions first to avoid orphaned references.
+          const submissions = await ctx.db
+            .query('homeworkSubmissions')
+            .withIndex('by_homework', (q) => q.eq('homeworkId', hw._id))
+            .collect();
+
+          for (const sub of submissions) {
+            await ctx.db.delete(sub._id);
+          }
+
           await ctx.db.delete(hw._id);
           deleted++;
         }

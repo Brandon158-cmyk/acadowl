@@ -54,8 +54,16 @@ export default function SubjectsPage() {
   const handleSeed = async () => {
     setIsSeedLoading(true);
     try {
-      await seedSubjects();
-      toast.success('Successfully imported MoE subjects');
+      const result = await seedSubjects();
+      if (result && 'created' in result && result.created > 0) {
+        toast.success(`Successfully imported ${result.created} MoE subject(s)`);
+      } else if (result && 'message' in result && result.message) {
+        toast.info(result.message);
+      } else if (result && 'created' in result && result.created === 0) {
+        toast.info('All default subjects are already present — nothing to import.');
+      } else {
+        toast.success('Successfully imported MoE subjects');
+      }
     } catch (e: unknown) {
       toast.error((e as Error).message || 'Failed to import subjects');
     } finally {
