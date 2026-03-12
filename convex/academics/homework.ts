@@ -17,7 +17,7 @@ export const createHomework = mutation({
       v.array(
         v.object({
           title: v.string(),
-          type: v.string(),
+          type: v.union(v.literal('pdf'), v.literal('link'), v.literal('text'), v.literal('file')),
           url: v.optional(v.string()),
           storageId: v.optional(v.id('_storage')),
         }),
@@ -60,7 +60,7 @@ export const updateHomework = mutation({
       v.array(
         v.object({
           title: v.string(),
-          type: v.string(),
+          type: v.union(v.literal('pdf'), v.literal('link'), v.literal('text'), v.literal('file')),
           url: v.optional(v.string()),
           storageId: v.optional(v.id('_storage')),
         }),
