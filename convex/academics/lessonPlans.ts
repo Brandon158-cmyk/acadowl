@@ -255,13 +255,24 @@ export const getPlansByStaff = query({
   handler: async (ctx) => {
     const { school, user } = await getAuthenticatedUserAndSchool(ctx);
 
+    const isAdmin =
+      user.role === 'platform_admin' || user.role === 'school_admin' || user.role === 'deputy_head';
+
+    if (isAdmin) {
+      // Admins see every plan in the school (draft or published)
+      return await ctx.db
+        .query('lessonPlans')
+        .withIndex('by_school', (q) => q.eq('schoolId', school._id))
+        .collect();
+    }
+
+    // Teaching staff: look up their staff record and return only their own plans
     const staff = await ctx.db
       .query('staff')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .first();
 
     if (!staff || staff.schoolId !== school._id) {
-      // Admin might call this, return empty or throw? Better just return empty if not staff.
       return [];
     }
 

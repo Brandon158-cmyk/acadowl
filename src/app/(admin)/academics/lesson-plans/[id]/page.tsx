@@ -55,6 +55,16 @@ export default function LessonPlanEditorPage({ params }: { params: Promise<{ id:
   const subjects = useQuery(api.academics.subjects.getSubjectsBySchool) || [];
   const grades = useQuery(api.academics.grades.getGradesBySchool) || [];
 
+  // Collect storageIds from the loaded plan so we can resolve download URLs
+  const storageIds = (plan?.resources ?? [])
+    .map((r) => r.storageId)
+    .filter((id): id is Id<'_storage'> => id != null);
+  const storageUrlMap =
+    useQuery(
+      api.academics.lessonPlans.getStorageUrls,
+      storageIds.length > 0 ? { storageIds } : 'skip',
+    ) ?? {};
+
   // Local state for auto-save
   const [formData, setFormData] = useState<LessonPlanFormData | null>(null);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
@@ -130,11 +140,20 @@ export default function LessonPlanEditorPage({ params }: { params: Promise<{ id:
         headers: { 'Content-Type': file.type },
         body: file,
       });
+      if (!result.ok) {
+        const text = await result.text().catch(() => result.statusText);
+        throw new Error(`Upload failed (${result.status}): ${text}`);
+      }
       const { storageId } = await result.json();
 
-      // 3. Save to plan
+      // 3. Derive resource type from MIME
+      const mime = file.type;
+      const resourceType: 'pdf' | 'text' | 'link' =
+        mime === 'application/pdf' ? 'pdf' : mime.startsWith('text/') ? 'text' : 'link';
+
+      // 4. Save to plan
       const newResource = {
-        type: 'pdf' as const, // Simplify for now, could be derived from file.type
+        type: resourceType,
         title: file.name,
         storageId: storageId as Id<'_storage'>,
       };
@@ -385,31 +404,49 @@ export default function LessonPlanEditorPage({ params }: { params: Promise<{ id:
               </p>
             ) : (
               <div className="space-y-2">
-                {formData.resources?.map((res, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-muted/50 flex items-center justify-between rounded-md border p-2 text-sm"
-                  >
-                    <div className="flex max-w-[200px] items-center gap-2 truncate">
-                      {res.type === 'link' ? (
-                        <LinkIcon className="h-3 w-3 shrink-0 text-blue-500" />
-                      ) : (
-                        <FileUp className="h-3 w-3 shrink-0 text-red-500" />
-                      )}
-                      <span className="truncate" title={res.title}>
-                        {res.title}
-                      </span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive h-6 w-6"
-                      onClick={() => removeResource(idx)}
+                {formData.resources?.map((res, idx) => {
+                  // Resolve a download URL: prefer the explicit url field, then storage
+                  const resolvedUrl =
+                    res.url ??
+                    (res.storageId ? (storageUrlMap[res.storageId] ?? undefined) : undefined);
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-muted/50 flex items-center justify-between rounded-md border p-2 text-sm"
                     >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
+                      <div className="flex max-w-[200px] items-center gap-2 truncate">
+                        {res.type === 'link' ? (
+                          <LinkIcon className="h-3 w-3 shrink-0 text-blue-500" />
+                        ) : (
+                          <FileUp className="h-3 w-3 shrink-0 text-red-500" />
+                        )}
+                        {resolvedUrl ? (
+                          <a
+                            href={resolvedUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="truncate hover:underline"
+                            title={res.title}
+                          >
+                            {res.title}
+                          </a>
+                        ) : (
+                          <span className="truncate" title={res.title}>
+                            {res.title}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive h-6 w-6"
+                        onClick={() => removeResource(idx)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

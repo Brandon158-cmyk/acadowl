@@ -32,7 +32,7 @@ export default function LessonPlansPage() {
   const router = useRouter();
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState('published');
+  const [activeTab, setActiveTab] = useState('draft');
 
   const filteredPlans = myPlans.filter((plan) => {
     if (selectedSubject !== 'all' && plan.subjectId !== selectedSubject) return false;

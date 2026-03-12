@@ -12,16 +12,26 @@ import { internalMutation } from '../_generated/server';
 export const deleteOrphans = internalMutation({
   args: {},
   handler: async (ctx) => {
-    // Collect all homework docs — we can't filter on missing fields via index
-    const all = await ctx.db.query('homework').collect();
+    let deleted = 0;
+    let cursor: string | null = null;
 
-    const orphans = all.filter((hw) => !('schoolId' in hw) || hw.schoolId == null);
+    // Process in pages of 50 to stay within Convex's query-result limits.
+    do {
+      const page = await ctx.db
+        .query('homework')
+        .paginate({ numItems: 50, cursor: cursor ?? 'null' });
 
-    for (const hw of orphans) {
-      console.log(`Deleting orphaned homework: ${hw._id} ("${hw.title}")`);
-      await ctx.db.delete(hw._id);
-    }
+      for (const hw of page.page) {
+        if (!('schoolId' in hw) || hw.schoolId == null) {
+          console.log(`Deleting orphaned homework: ${hw._id} ("${hw.title}")`);
+          await ctx.db.delete(hw._id);
+          deleted++;
+        }
+      }
 
-    return { deleted: orphans.length };
+      cursor = page.isDone ? null : page.continueCursor;
+    } while (cursor !== null);
+
+    return { deleted };
   },
 });

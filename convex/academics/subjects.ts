@@ -29,6 +29,16 @@ export const createSubject = mutation({
       }
     }
 
+    // Enforce unique name within the school
+    const nameConflict = await ctx.db
+      .query('subjects')
+      .withIndex('by_school', (q) => q.eq('schoolId', school._id))
+      .filter((q) => q.eq(q.field('name'), args.name))
+      .first();
+    if (nameConflict) {
+      throwEduError(EduError.ALREADY_EXISTS, `Subject name "${args.name}" already exists.`);
+    }
+
     // Validate all gradeIds belong to this school
     for (const gradeId of args.gradeIds) {
       const grade = await ctx.db.get(gradeId);
@@ -158,6 +168,19 @@ export const seedDefaultSubjects = mutation({
       .query('grades')
       .withIndex('by_school', (q) => q.eq('schoolId', school._id))
       .collect();
+
+    // Guard: can't seed subjects with no grades — every subject needs at least one level.
+    if (grades.length === 0) {
+      console.warn(
+        '[seedDefaultSubjects] No grades found for school',
+        school._id,
+        '— aborting seed.',
+      );
+      return {
+        seeded: 0,
+        message: 'No grades configured. Please add grades before seeding subjects.',
+      };
+    }
 
     // Group grades by level for assignment
     const primaryGradeIds = grades.filter((g) => g.level >= 1 && g.level <= 7).map((g) => g._id);

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
+import { Id } from '../../../../../convex/_generated/dataModel';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,16 +22,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { PlusCircle, Download, BookOpen } from 'lucide-react';
+import { PlusCircle, Download, BookOpen, ChevronsUpDown } from 'lucide-react';
 
 export default function SubjectsPage() {
   const subjects = useQuery(api.academics.subjects.getSubjectsBySchool) || [];
@@ -42,12 +37,18 @@ export default function SubjectsPage() {
   const [isSeedLoading, setIsSeedLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const [newSubject, setNewSubject] = useState({
+  const [newSubject, setNewSubject] = useState<{
+    name: string;
+    code: string;
+    isCompulsory: boolean;
+    eczSubjectCode: string;
+    gradeIds: Id<'grades'>[];
+  }>({
     name: '',
     code: '',
     isCompulsory: false,
     eczSubjectCode: '',
-    gradeIds: [] as string[],
+    gradeIds: [],
   });
 
   const handleSeed = async () => {
@@ -71,8 +72,7 @@ export default function SubjectsPage() {
         code: newSubject.code || undefined,
         isCompulsory: newSubject.isCompulsory,
         eczSubjectCode: newSubject.eczSubjectCode || undefined,
-        gradeIds:
-          newSubject.gradeIds as import('../../../../../convex/_generated/dataModel').Id<'grades'>[],
+        gradeIds: newSubject.gradeIds,
       });
       toast.success('Subject created');
       setIsCreateModalOpen(false);
@@ -81,7 +81,7 @@ export default function SubjectsPage() {
         code: '',
         isCompulsory: false,
         eczSubjectCode: '',
-        gradeIds: [],
+        gradeIds: [] as Id<'grades'>[],
       });
     } catch (e: unknown) {
       toast.error((e as Error).message || 'Failed to create subject');
@@ -162,37 +162,49 @@ export default function SubjectsPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Grades</label>
-                  <Select
-                    onValueChange={(val) => {
-                      if (!val) return;
-                      const strVal = val as string;
-                      setNewSubject((prev) => ({
-                        ...prev,
-                        gradeIds: prev.gradeIds.includes(strVal)
-                          ? prev.gradeIds.filter((id) => id !== strVal)
-                          : [...prev.gradeIds, strVal],
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select grades...">
+                  <Popover>
+                    <PopoverTrigger>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal"
+                      >
                         {newSubject.gradeIds.length === 0
                           ? 'Select grades…'
                           : newSubject.gradeIds.length === 1
                             ? (grades.find((g) => g._id === newSubject.gradeIds[0])?.name ??
                               '1 grade selected')
                             : `${newSubject.gradeIds.length} grades selected`}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {grades.map((g) => (
-                        <SelectItem key={g._id} value={g._id}>
-                          {newSubject.gradeIds.includes(g._id) ? '✓ ' : ''}
-                          {g.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-2" align="start">
+                      <div className="max-h-56 space-y-1 overflow-y-auto">
+                        {grades.map((g) => {
+                          const checked = newSubject.gradeIds.includes(g._id);
+                          return (
+                            <label
+                              key={g._id}
+                              className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+                            >
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={() =>
+                                  setNewSubject((prev) => ({
+                                    ...prev,
+                                    gradeIds: checked
+                                      ? prev.gradeIds.filter((id) => id !== g._id)
+                                      : [...prev.gradeIds, g._id],
+                                  }))
+                                }
+                              />
+                              {g.name}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {newSubject.gradeIds.map((id) => {
                       const g = grades.find((gr) => gr._id === id);

@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from '../_generated/server';
 import { Id } from '../_generated/dataModel';
 import { getAuthenticatedUserAndSchool } from '../_lib/schoolContext';
+import { requireRole } from '../_lib/permissions';
 import { EduError, throwEduError } from '../_lib/errors';
 
 // submitHomework was removed — it had a data-corrupting bug (cast homeworkId as studentId).
@@ -27,6 +28,12 @@ export const submitHomeworkWithStudent = mutation({
     // Check if homework exists and belongs to school
     const hw = await ctx.db.get(args.homeworkId);
     if (!hw || hw.schoolId !== school._id) throwEduError(EduError.NOT_FOUND, 'Homework not found');
+
+    // Verify the student exists and belongs to the same school
+    const student = await ctx.db.get(args.studentId);
+    if (!student || student.schoolId !== school._id) {
+      throwEduError(EduError.NOT_FOUND, 'Student not found');
+    }
 
     // Check if already submitted
     const existing = await ctx.db
@@ -73,7 +80,14 @@ export const gradeSubmission = mutation({
     feedback: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { school, user } = await getAuthenticatedUserAndSchool(ctx);
+    // Only teaching staff and admins may grade submissions
+    const { school, user } = await requireRole(ctx, [
+      'platform_admin',
+      'school_admin',
+      'deputy_head',
+      'teacher',
+      'class_teacher',
+    ]);
 
     // Fetch submission; verify it belongs to the caller's school
     const submission = await ctx.db.get(args.submissionId);
