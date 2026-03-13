@@ -130,7 +130,7 @@ export function TeacherSidebar() {
         <Button
           variant="outline"
           size="icon"
-          className="fixed top-20 left-0 z-40 h-10 w-8 rounded-l-none border-l-0 bg-white text-[#2D8C3E] shadow-md hover:bg-gray-50 hover:text-[#236B30]"
+          className="fixed top-20 left-0 z-40 h-10 w-8 rounded-l-none border-l-0 bg-white text-[#2D8C3E] hover:bg-gray-50 hover:text-[#236B30]"
           onClick={() => setCollapsed(false)}
         >
           <ChevronRight className="h-5 w-5" />
