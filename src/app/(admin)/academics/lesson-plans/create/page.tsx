@@ -71,7 +71,6 @@ export default function CreateLessonPlanPage() {
         </Button>
         <div>
           <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-gray-900">
-            <Sparkles className="h-8 w-8 text-amber-500" />
             New Lesson Plan
           </h1>
           <p className="mt-1 text-gray-500 italic">
@@ -167,9 +166,6 @@ export default function CreateLessonPlanPage() {
       </Card>
 
       <div className="flex items-start gap-4 rounded-xl border border-amber-100 bg-amber-50 p-4">
-        <div className="rounded-lg bg-white p-2 shadow-sm">
-          <Sparkles className="h-5 w-5 text-amber-500" />
-        </div>
         <div>
           <p className="text-sm font-bold text-amber-900">Pro Tip</p>
           <p className="text-sm leading-relaxed text-amber-800/80">

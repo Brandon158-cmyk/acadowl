@@ -211,41 +211,39 @@ export default function GradesPage() {
 
       {/* KPI Stats Row */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card className="flex items-center gap-4 p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-[#2D9B4E]">
-            <CheckCircle2 className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="font-jakarta text-xs font-semibold tracking-wider text-gray-500 uppercase">
-              Grade Levels
-            </p>
-            <p className="font-lexend text-3xl font-bold text-gray-900">{grades.length}</p>
-          </div>
-        </Card>
-
-        <Card className="flex items-center gap-4 p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-            <GraduationCap className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="font-jakarta text-xs font-semibold tracking-wider text-gray-500 uppercase">
-              Graduation Classes
-            </p>
-            <p className="font-lexend text-3xl font-bold text-gray-900">
-              {graduationClasses.length}
-            </p>
+        <Card className="relative overflow-hidden border-none bg-white p-6 shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50 text-[#2D9B4E]">
+              <CheckCircle2 className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Grade Levels</p>
+              <h3 className="text-2xl font-bold text-gray-900">{grades.length}</h3>
+            </div>
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-            <LayoutGrid className="h-6 w-6" />
+        <Card className="relative overflow-hidden border-none bg-white p-6 shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <GraduationCap className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Graduation Classes</p>
+              <h3 className="text-2xl font-bold text-gray-900">{graduationClasses.length}</h3>
+            </div>
           </div>
-          <div>
-            <p className="font-jakarta text-xs font-semibold tracking-wider text-gray-500 uppercase">
-              Active Streams
-            </p>
-            <p className="font-lexend text-3xl font-bold text-gray-900">{uniqueStreams.length}</p>
+        </Card>
+
+        <Card className="relative overflow-hidden border-none bg-white p-6 shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
+              <LayoutGrid className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Active Streams</p>
+              <h3 className="text-2xl font-bold text-gray-900">{uniqueStreams.length}</h3>
+            </div>
           </div>
         </Card>
       </div>

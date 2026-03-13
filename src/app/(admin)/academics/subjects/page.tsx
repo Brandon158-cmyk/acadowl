@@ -35,7 +35,6 @@ import {
   LayoutGrid,
   ShieldCheck,
   ChevronRight,
-  Home,
   ArrowUpDown,
   ChevronLeft,
   Filter,
@@ -245,39 +244,39 @@ export default function SubjectsPage() {
 
       {/* KPI Stats Row */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card className="flex items-center gap-4 p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-[#2D9B4E]">
-            <BookMarked className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="font-jakarta text-xs font-semibold tracking-wider text-gray-500 uppercase">
-              Total Subjects
-            </p>
-            <p className="font-lexend text-3xl font-bold text-gray-900">{activeSubjects.length}</p>
-          </div>
-        </Card>
-
-        <Card className="flex items-center gap-4 p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="font-jakarta text-xs font-semibold tracking-wider text-gray-500 uppercase">
-              Compulsory
-            </p>
-            <p className="font-lexend text-3xl font-bold text-gray-900">{compulsoryCount}</p>
+        <Card className="relative overflow-hidden border-none bg-white p-6 shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50 text-[#2D9B4E]">
+              <BookMarked className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Subjects</p>
+              <h3 className="text-2xl font-bold text-gray-900">{activeSubjects.length}</h3>
+            </div>
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-6 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-            <LayoutGrid className="h-6 w-6" />
+        <Card className="relative overflow-hidden border-none bg-white p-6 shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Compulsory</p>
+              <h3 className="text-2xl font-bold text-gray-900">{compulsoryCount}</h3>
+            </div>
           </div>
-          <div>
-            <p className="font-jakarta text-xs font-semibold tracking-wider text-gray-500 uppercase">
-              Grades Covered
-            </p>
-            <p className="font-lexend text-3xl font-bold text-gray-900">{uniqueGradesCount}</p>
+        </Card>
+
+        <Card className="relative overflow-hidden border-none bg-white p-6 shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
+              <LayoutGrid className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Grades Covered</p>
+              <h3 className="text-2xl font-bold text-gray-900">{uniqueGradesCount}</h3>
+            </div>
           </div>
         </Card>
       </div>
