@@ -203,23 +203,20 @@ export default function SubjectsPage() {
   const uniqueGradesCount = new Set(activeSubjects.flatMap((s) => s.gradeIds)).size;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 pb-10">
+    <div className="mx-auto max-w-7xl space-y-8 pb-10">
       {/* Breadcrumbs & Header */}
-      <div className="space-y-4">
-        <nav className="flex items-center gap-2 text-sm font-medium text-gray-500">
-          <Home className="h-4 w-4" />
-          <ChevronRight className="h-4 w-4" />
-          <span>Academics</span>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-gray-900">Subjects</span>
-        </nav>
-
-        <div className="flex flex-col flex-wrap items-start justify-between gap-6 sm:flex-row sm:items-center">
+      <div className="space-y-1">
+        <div className="flex flex-col flex-wrap items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="font-lexend text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+            <div className="mb-1 flex items-center gap-2 text-sm font-medium text-[#2D9B4E]">
+              <span>Academics</span>
+              <ChevronRight className="text-muted-foreground/50 h-3.5 w-3.5" />
+              <span className="text-muted-foreground">Course Catalog</span>
+            </div>
+            <h1 className="font-heading text-3xl font-bold tracking-tight text-[#111827]">
               Curriculum Subjects
             </h1>
-            <p className="font-jakarta mt-2 max-w-2xl text-base text-gray-500">
+            <p className="mt-1 max-w-2xl text-sm text-[#6B7280]">
               Manage your school&apos;s official curriculum, MoE subjects, and grade-specific
               mappings.
             </p>
