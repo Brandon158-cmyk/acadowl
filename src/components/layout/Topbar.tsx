@@ -3,9 +3,10 @@
 import { useMe } from '@/hooks/useMe';
 import { usePermission } from '@/hooks/usePermission';
 import { Permission } from '@/lib/roles/types';
-import { Bell, Calendar, MessageSquare, Menu } from 'lucide-react';
+import { Bell, Calendar, MessageSquare, Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import Link from 'next/link';
@@ -33,25 +34,38 @@ export function Topbar({ onToggleMobileNav }: TopbarProps) {
   const canViewSMS = usePermission(Permission.SEND_BULK_SMS);
 
   return (
-    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 z-20 border-b backdrop-blur">
-      <div className="flex h-16 items-center gap-4 px-4 md:px-8">
+    <header className="sticky top-0 z-50 h-[60px] border-b bg-white px-4 md:px-6">
+      <div className="flex h-full items-center gap-4">
         {/* Mobile hamburger */}
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleMobileNav}>
           <Menu className="h-5 w-5" />
         </Button>
 
-        {/* School name */}
-        <h2 className="text-foreground truncate text-sm font-semibold">
-          {school?.name || 'EduZambia'}
-        </h2>
+        {/* School Name Chip (md+) */}
+        <div className="hidden items-center rounded-lg border bg-gray-50 px-3 py-1 md:flex">
+          <span className="text-xs font-semibold text-gray-700">
+            {school?.shortName || school?.name || 'EduZambia'}
+          </span>
+        </div>
 
-        {/* Academic Year + Term Badge */}
+        {/* Academic Year + Term Badge (Logic Preserved) */}
         {school?.currentTermId && (
-          <Badge variant="outline" className="hidden shrink-0 md:inline-flex">
+          <Badge variant="outline" className="hidden shrink-0 items-center md:inline-flex">
             <Calendar className="mr-1 h-3 w-3" />
             {new Date().getFullYear()} · Active Term
           </Badge>
         )}
+
+        <div className="flex-1" />
+
+        {/* Center: Global Search Bar (md+) - Design Element */}
+        <div className="relative hidden max-w-2xl flex-1 md:block">
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input
+            placeholder="Search for something..."
+            className="h-10 w-full rounded-full border-none bg-gray-100 pl-10 focus-visible:ring-1 focus-visible:ring-[#2D9B4E]"
+          />
+        </div>
 
         <div className="flex-1" />
 
@@ -88,11 +102,11 @@ export function Topbar({ onToggleMobileNav }: TopbarProps) {
           </PopoverContent>
         </Popover>
 
-        {/* User avatar */}
+        {/* User avatar / profile button */}
         {user && (
-          <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold">
+          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E8F5ED] text-xs font-bold text-[#2D9B4E] transition-colors hover:bg-[#D7EDE0]">
             {(user.name || 'U').charAt(0).toUpperCase()}
-          </div>
+          </button>
         )}
       </div>
     </header>
