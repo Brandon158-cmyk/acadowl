@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans, JetBrains_Mono, Lexend } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server';
@@ -13,6 +13,11 @@ const inter = Inter({
 
 const jakarta = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
+  subsets: ['latin'],
+});
+
+const lexend = Lexend({
+  variable: '--font-lexend',
   subsets: ['latin'],
 });
 
@@ -37,9 +42,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${jakarta.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${jakarta.variable} ${lexend.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="font-sans antialiased">
+      <body className="font-sans text-gray-700 antialiased">
         <ConvexAuthNextjsServerProvider>
           <ConvexClientProvider>
             <TooltipProvider>

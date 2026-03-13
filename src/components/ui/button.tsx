@@ -11,13 +11,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-[#2D8C3E] text-white shadow-sm hover:bg-[#236B30] hover:shadow-[0_4px_8px_rgba(45,140,62,0.28)] active:bg-[#1A5225] active:shadow-inner focus-visible:ring-[#2D8C3E]/40 focus-visible:ring-offset-2 disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] disabled:shadow-none dark:hover:bg-[#236B30]',
+          'bg-[#2D9B4E] text-white shadow-sm hover:bg-[#217A3C] hover:shadow-[0_4px_12px_rgba(45,155,78,0.25)] active:bg-[#1A6130] focus-visible:ring-[#2D9B4E]/40 focus-visible:ring-offset-2 disabled:bg-[#C3E6CF] disabled:text-white disabled:shadow-none dark:hover:bg-[#217A3C]',
         outline:
-          'border-2 border-[#E5E7EB] bg-white text-[#374151] shadow-sm hover:bg-[#F9FAFB] hover:border-[#D1D5DB] active:bg-[#F3F4F6] active:border-[#9CA3AF] focus-visible:ring-[#2D8C3E]/40 focus-visible:ring-offset-2 disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] disabled:border-[#E5E7EB] dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+          'border-2 border-[#2D9B4E] bg-white text-[#2D9B4E] shadow-sm hover:bg-[#E8F5ED] hover:border-[#217A3C] hover:text-[#217A3C] active:bg-[#C3E6CF] active:translate-y-[1px] focus-visible:ring-[#2D9B4E]/40 focus-visible:ring-offset-2 disabled:bg-white disabled:border-[#E5E7EB] disabled:text-[#9CA3AF] dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary:
-          'border-2 border-[#E5E7EB] bg-white text-[#374151] shadow-sm hover:bg-[#F9FAFB] hover:border-[#D1D5DB] active:bg-[#F3F4F6] active:border-[#9CA3AF] focus-visible:ring-[#2D8C3E]/40 focus-visible:ring-offset-2 disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] disabled:border-[#E5E7EB]',
+          'border-2 border-[#2D9B4E] bg-white text-[#2D9B4E] shadow-sm hover:bg-[#E8F5ED] hover:border-[#217A3C] hover:text-[#217A3C] active:bg-[#C3E6CF] active:translate-y-[1px] focus-visible:ring-[#2D9B4E]/40 focus-visible:ring-offset-2 disabled:bg-white disabled:border-[#E5E7EB] disabled:text-[#9CA3AF]',
         ghost:
-          'bg-transparent text-[#374151] hover:bg-[#F3F4F6] active:bg-[#E5E7EB] focus-visible:ring-[#2D8C3E]/40 disabled:text-[#9CA3AF] dark:hover:bg-muted/50 dark:text-muted-foreground',
+          'bg-transparent text-[#374151] border-1.5 border-[#E5E7EB] hover:bg-[#F3F4F6] hover:border-[#D1D5DB] active:bg-[#E5E7EB] focus-visible:ring-[#2D9B4E]/40 disabled:text-[#9CA3AF] disabled:border-[#E5E7EB] dark:hover:bg-muted/50 dark:text-muted-foreground',
         destructive:
           'bg-[#DC2626] text-white shadow-sm hover:bg-[#B91C1C] hover:shadow-[0_4px_8px_rgba(220,38,38,0.28)] active:bg-[#991B1B]',
         link: 'text-primary underline-offset-4 hover:underline',
