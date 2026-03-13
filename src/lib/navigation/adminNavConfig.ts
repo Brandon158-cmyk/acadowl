@@ -18,6 +18,7 @@ import {
   ToggleRight,
   UserCog,
   FileText,
+  LayoutGrid,
   type LucideIcon,
 } from 'lucide-react';
 import { Feature } from '@/lib/features/flags';
@@ -85,6 +86,12 @@ export const adminNavConfig: NavItem[] = [
         label: 'Grades',
         href: '/academics/grades',
         icon: GraduationCap,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+      },
+      {
+        label: 'Sections',
+        href: '/academics/sections',
+        icon: LayoutGrid,
         requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
       },
       {

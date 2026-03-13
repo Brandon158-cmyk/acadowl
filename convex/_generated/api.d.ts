@@ -18,6 +18,7 @@ import type * as academics_grades from "../academics/grades.js";
 import type * as academics_homework from "../academics/homework.js";
 import type * as academics_homeworkSubmissions from "../academics/homeworkSubmissions.js";
 import type * as academics_lessonPlans from "../academics/lessonPlans.js";
+import type * as academics_sections from "../academics/sections.js";
 import type * as academics_subjects from "../academics/subjects.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   "academics/homework": typeof academics_homework;
   "academics/homeworkSubmissions": typeof academics_homeworkSubmissions;
   "academics/lessonPlans": typeof academics_lessonPlans;
+  "academics/sections": typeof academics_sections;
   "academics/subjects": typeof academics_subjects;
   auth: typeof auth;
   crons: typeof crons;
