@@ -12,6 +12,7 @@ import {
   Bus,
   Library,
   MonitorPlay,
+  Clock,
   BarChart3,
   Settings,
   Bell,
@@ -159,6 +160,19 @@ export const adminNavConfig: NavItem[] = [
         icon: BookOpen,
       },
       {
+        label: 'Timetable',
+        href: '/academics/timetable',
+        icon: Clock,
+        requiredFeature: Feature.TIMETABLE,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+      },
+      {
+        label: 'View Timetable',
+        href: '/academics/timetable/view',
+        icon: Clock,
+        requiredFeature: Feature.TIMETABLE,
+      },
+      {
         label: 'Exams',
         href: '/exams',
         icon: FileText,
@@ -259,6 +273,12 @@ export const adminNavConfig: NavItem[] = [
         href: '/settings/users',
         icon: UserCog,
         requiredPermission: Permission.MANAGE_USERS,
+      },
+      {
+        label: 'Period Config',
+        href: '/settings/periods',
+        icon: Clock,
+        requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
       },
       {
         label: 'General Settings',

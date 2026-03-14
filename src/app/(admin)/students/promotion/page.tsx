@@ -134,10 +134,12 @@ export default function PromotionPage() {
   const setAction = (studentId: string, action: PromotionAction) => {
     const current = studentActions.get(studentId);
     const newActions = new Map(studentActions);
+    // Clear toSectionId when action changes — the old section may not be valid for the new action
+    const keepSection = current && current.action === action;
     newActions.set(studentId, {
       studentId: studentId as Id<'students'>,
       action,
-      toSectionId: current?.toSectionId,
+      toSectionId: keepSection ? current.toSectionId : undefined,
     });
     setStudentActions(newActions);
   };
@@ -247,7 +249,11 @@ export default function PromotionPage() {
             <Select
               value={fromYearId}
               onValueChange={(val) => {
-                if (val) { setFromYearId(val); setStudentActions(new Map()); }
+                if (val) {
+                  setFromYearId(val);
+                  setStudentActions(new Map());
+                  if (val === toYearId) setToYearId('');
+                }
               }}
             >
               <SelectTrigger className="h-[48px] w-[240px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">

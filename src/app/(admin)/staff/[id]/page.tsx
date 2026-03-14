@@ -169,29 +169,33 @@ export default function StaffProfilePage() {
             }
           : undefined;
 
+      // For optional fields: undefined = not edited, empty string = explicitly cleared
+      const trimOrUndefined = (val: string | undefined) =>
+        val === undefined ? undefined : val.trim();
+
       await updateStaff({
         staffId,
-        firstName: editData.firstName?.trim() || undefined,
-        lastName: editData.lastName?.trim() || undefined,
-        middleName: editData.middleName?.trim() || undefined,
+        firstName: trimOrUndefined(editData.firstName) || undefined,
+        lastName: trimOrUndefined(editData.lastName) || undefined,
+        middleName: trimOrUndefined(editData.middleName),
         gender: editData.gender || undefined,
         dateOfBirth: editData.dateOfBirth || undefined,
-        nrc: editData.nrc?.trim() || undefined,
-        phone: editData.phone?.trim() || undefined,
-        altPhone: editData.altPhone?.trim() || undefined,
-        email: editData.email?.trim() || undefined,
-        address: editData.address?.trim() || undefined,
+        nrc: trimOrUndefined(editData.nrc),
+        phone: trimOrUndefined(editData.phone),
+        altPhone: trimOrUndefined(editData.altPhone),
+        email: trimOrUndefined(editData.email),
+        address: trimOrUndefined(editData.address),
         emergencyContact,
         staffCategory: editData.staffCategory || undefined,
-        jobTitle: editData.jobTitle?.trim() || undefined,
-        tcazNumber: editData.tcazNumber?.trim() || undefined,
-        employeeNumber: editData.employeeNumber?.trim() || undefined,
+        jobTitle: trimOrUndefined(editData.jobTitle),
+        tcazNumber: trimOrUndefined(editData.tcazNumber),
+        employeeNumber: trimOrUndefined(editData.employeeNumber),
         contractType: editData.contractType || undefined,
         dateJoined: editData.dateJoined || undefined,
-        bankName: editData.bankName?.trim() || undefined,
-        bankAccountNumber: editData.bankAccountNumber?.trim() || undefined,
-        napsaNumber: editData.napsaNumber?.trim() || undefined,
-        nhimaNumber: editData.nhimaNumber?.trim() || undefined,
+        bankName: trimOrUndefined(editData.bankName),
+        bankAccountNumber: trimOrUndefined(editData.bankAccountNumber),
+        napsaNumber: trimOrUndefined(editData.napsaNumber),
+        nhimaNumber: trimOrUndefined(editData.nhimaNumber),
       });
       toast.success('Staff profile updated');
       setIsEditing(false);
@@ -693,15 +697,20 @@ export default function StaffProfilePage() {
               <h2 className="font-heading text-lg font-semibold text-[#111827]">
                 Subject & Section Assignments
               </h2>
-              <Link href="/staff/assignments">
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-sm">
-                  <LayoutGrid className="h-3.5 w-3.5" />
-                  Manage Assignments
-                </Button>
+              <Link
+                href="/staff/assignments"
+                className="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-3 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+                Manage Assignments
               </Link>
             </div>
 
-            {!assignments || assignments.length === 0 ? (
+            {assignments === undefined ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+              </div>
+            ) : assignments.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-12 text-center">
                 <BookOpen className="h-10 w-10 text-gray-300" />
                 <p className="font-semibold text-gray-900">No assignments</p>
@@ -757,7 +766,11 @@ export default function StaffProfilePage() {
               Leave History
             </h2>
 
-            {!leaveRequests || leaveRequests.length === 0 ? (
+            {leaveRequests === undefined ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+              </div>
+            ) : leaveRequests.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-12 text-center">
                 <Clock className="h-10 w-10 text-gray-300" />
                 <p className="font-semibold text-gray-900">No leave requests</p>

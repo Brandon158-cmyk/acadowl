@@ -17,7 +17,7 @@ export const preparePromotion = query({
     toAcademicYearId: v.id('academicYears'),
   },
   handler: async (ctx, args) => {
-    const { school } = await getAuthenticatedUserAndSchool(ctx);
+    const { school } = await requirePermission(ctx, Permission.PROMOTE_STUDENTS);
 
     // Validate both academic years belong to this school
     const fromYear = await ctx.db.get(args.fromAcademicYearId);
@@ -66,6 +66,24 @@ export const preparePromotion = query({
 
     const termIds = terms.map((t) => t._id);
 
+    // Preload all exam sessions for the source year's terms
+    const allSessions = (
+      await Promise.all(
+        terms.map((term) =>
+          ctx.db
+            .query('examSessions')
+            .withIndex('by_term', (q) => q.eq('schoolId', school._id).eq('termId', term._id))
+            .collect(),
+        ),
+      )
+    ).flat();
+
+    const validSessionIds = new Set(
+      allSessions
+        .filter((s) => s.type === 'terminal' || s.type === 'final')
+        .map((s) => s._id.toString()),
+    );
+
     // Build student promotion data
     const promotionData = await Promise.all(
       students.map(async (student) => {
@@ -79,17 +97,9 @@ export const preparePromotion = query({
           .collect();
 
         // Filter to terminal/final exams in the source year's terms
-        const relevantResults = [];
-        for (const result of allResults) {
-          const session = await ctx.db.get(result.examSessionId);
-          if (
-            session &&
-            termIds.includes(session.termId) &&
-            (session.type === 'terminal' || session.type === 'final')
-          ) {
-            relevantResults.push(result);
-          }
-        }
+        const relevantResults = allResults.filter((result) =>
+          validSessionIds.has(result.examSessionId.toString()),
+        );
 
         // Calculate average score
         const scores = relevantResults
@@ -195,6 +205,8 @@ export const bulkPromoteStudents = mutation({
           v.literal('withdraw'),
         ),
         toSectionId: v.optional(v.id('sections')),
+        currentAcademicYearId: v.optional(v.id('academicYears')),
+        currentGradeId: v.optional(v.id('grades')),
       }),
     ),
   },
@@ -207,25 +219,12 @@ export const bulkPromoteStudents = mutation({
       throwEduError(EduError.NOT_FOUND, 'Target academic year not found.');
     }
 
-    // Validate target year has sections
-    const targetSections = await ctx.db
-      .query('sections')
-      .withIndex('by_academic_year', (q) =>
-        q.eq('schoolId', school._id).eq('academicYearId', args.toAcademicYearId),
-      )
-      .collect();
-
-    if (targetSections.length === 0) {
-      throwEduError(
-        EduError.VALIDATION_ERROR,
-        'Target academic year has no sections created. Create sections before promoting.',
-      );
-    }
-
     const grades = await ctx.db
       .query('grades')
       .withIndex('by_school', (q) => q.eq('schoolId', school._id))
       .collect();
+
+    const gradesMap = new Map(grades.map((g) => [g._id.toString(), g]));
 
     const today = new Date().toISOString().split('T')[0];
     let promoted = 0;
@@ -241,17 +240,48 @@ export const bulkPromoteStudents = mutation({
         continue;
       }
 
+      // Staleness check: if caller supplied current state, verify it matches the DB
+      if (item.currentAcademicYearId && student.currentAcademicYearId !== item.currentAcademicYearId) {
+        throwEduError(
+          EduError.VALIDATION_ERROR,
+          `Student data is stale: academic year mismatch for student ${student.firstName} ${student.lastName}.`,
+        );
+      }
+      if (item.currentGradeId && student.currentGradeId !== item.currentGradeId) {
+        throwEduError(
+          EduError.VALIDATION_ERROR,
+          `Student data is stale: grade mismatch for student ${student.firstName} ${student.lastName}.`,
+        );
+      }
+
       switch (item.action) {
         case 'promote': {
           if (!item.toSectionId) {
-            skipped++;
-            continue;
+            throwEduError(
+              EduError.VALIDATION_ERROR,
+              `Target section is required for promoting student ${student.firstName} ${student.lastName}.`,
+            );
           }
           const targetSection = await ctx.db.get(item.toSectionId);
           if (!targetSection || targetSection.schoolId !== school._id) {
-            skipped++;
-            continue;
+            throwEduError(EduError.NOT_FOUND, 'Target section not found.');
           }
+          if (targetSection.academicYearId !== args.toAcademicYearId) {
+            throwEduError(
+              EduError.VALIDATION_ERROR,
+              `Target section "${targetSection.displayName}" does not belong to the target academic year.`,
+            );
+          }
+          // Validate grade level: promote must go to currentGrade.level + 1
+          const currentGrade = gradesMap.get(student.currentGradeId.toString());
+          const targetGrade = gradesMap.get(targetSection.gradeId.toString());
+          if (currentGrade && targetGrade && targetGrade.level !== currentGrade.level + 1) {
+            throwEduError(
+              EduError.VALIDATION_ERROR,
+              `Cannot promote ${student.firstName} ${student.lastName} from ${currentGrade.name} to ${targetGrade.name}: target grade must be one level higher.`,
+            );
+          }
+
           // ISSUE-056: Close current history record
           const promCurrent = await ctx.db
             .query('sectionHistory')
@@ -285,13 +315,29 @@ export const bulkPromoteStudents = mutation({
 
         case 'repeat': {
           if (!item.toSectionId) {
-            skipped++;
-            continue;
+            throwEduError(
+              EduError.VALIDATION_ERROR,
+              `Target section is required for repeating student ${student.firstName} ${student.lastName}.`,
+            );
           }
           const targetSection = await ctx.db.get(item.toSectionId);
           if (!targetSection || targetSection.schoolId !== school._id) {
-            skipped++;
-            continue;
+            throwEduError(EduError.NOT_FOUND, 'Target section not found.');
+          }
+          if (targetSection.academicYearId !== args.toAcademicYearId) {
+            throwEduError(
+              EduError.VALIDATION_ERROR,
+              `Target section "${targetSection.displayName}" does not belong to the target academic year.`,
+            );
+          }
+          // Validate grade level: repeat must stay at same grade level
+          const currentGradeRep = gradesMap.get(student.currentGradeId.toString());
+          const targetGradeRep = gradesMap.get(targetSection.gradeId.toString());
+          if (currentGradeRep && targetGradeRep && targetGradeRep.level !== currentGradeRep.level) {
+            throwEduError(
+              EduError.VALIDATION_ERROR,
+              `Cannot repeat ${student.firstName} ${student.lastName} into ${targetGradeRep.name}: target grade must match current grade ${currentGradeRep.name}.`,
+            );
           }
 
           // ISSUE-056: Close current history record

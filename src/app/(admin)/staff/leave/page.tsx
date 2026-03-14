@@ -94,6 +94,9 @@ export default function LeaveManagementPage() {
       status: filterStatus === 'all' ? undefined : filterStatus,
     }) ?? [];
 
+  const allLeaveRequests =
+    useQuery(api.staff.leaveRequests.getAllLeaveRequests, {}) ?? [];
+
   const pendingRequests =
     useQuery(api.staff.leaveRequests.getPendingLeaveRequests) ?? [];
 
@@ -166,21 +169,21 @@ export default function LeaveManagementPage() {
         />
         <SummaryCard
           label="Approved"
-          value={leaveRequests.filter((r) => r.status === 'approved').length}
+          value={allLeaveRequests.filter((r) => r.status === 'approved').length}
           icon={CheckCircle2}
           bgColor="bg-[#E8F5ED]"
           iconColor="text-[#2D9B4E]"
         />
         <SummaryCard
           label="Rejected"
-          value={leaveRequests.filter((r) => r.status === 'rejected').length}
+          value={allLeaveRequests.filter((r) => r.status === 'rejected').length}
           icon={XCircle}
           bgColor="bg-[#FEF2F2]"
           iconColor="text-[#DC2626]"
         />
         <SummaryCard
           label="Total"
-          value={leaveRequests.length}
+          value={allLeaveRequests.length}
           icon={FileText}
           bgColor="bg-gray-50"
           iconColor="text-gray-500"

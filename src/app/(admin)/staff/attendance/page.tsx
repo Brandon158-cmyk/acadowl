@@ -3,6 +3,7 @@
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
 import { useState, useMemo } from 'react';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -78,7 +79,7 @@ const STATUS_CONFIG: Record<
 };
 
 function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return format(date, 'yyyy-MM-dd');
 }
 
 function formatDisplayDate(dateStr: string): string {
@@ -131,7 +132,7 @@ export default function StaffAttendancePage() {
   );
 
   // Check if there are unsaved changes
-  const hasChanges = Object.keys(localStatuses).length > 0;
+  const hasChanges = Object.keys(localStatuses).length > 0 || Object.keys(localNotes).length > 0;
 
   // Mark all present
   const markAllPresent = () => {
@@ -149,9 +150,12 @@ export default function StaffAttendancePage() {
     if (!hasChanges) return;
     setIsSaving(true);
     try {
-      const entries = Object.entries(localStatuses).map(([staffId, status]) => ({
+      const allStaffIds = [
+        ...new Set([...Object.keys(localStatuses), ...Object.keys(localNotes)]),
+      ];
+      const entries = allStaffIds.map((staffId) => ({
         staffId: staffId as Id<'staff'>,
-        status,
+        status: localStatuses[staffId] ?? getStatus(staffId) ?? ('present' as AttendanceStatus),
         notes: localNotes[staffId] || undefined,
       }));
 

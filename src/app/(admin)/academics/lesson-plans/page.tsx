@@ -1,8 +1,11 @@
 'use client';
 
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { Id } from '../../../../../convex/_generated/dataModel';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,9 +52,17 @@ import {
 import { Input } from '@/components/ui/input';
 
 export default function LessonPlansPage() {
-  const subjects = useQuery(api.academics.subjects.getSubjectsBySchool) || [];
-  const grades = useQuery(api.academics.grades.getGradesBySchool) || [];
-  const myPlans = useQuery(api.academics.lessonPlans.getPlansByStaff) || [];
+  const subjectsRaw = useQuery(api.academics.subjects.getSubjectsBySchool);
+  const gradesRaw = useQuery(api.academics.grades.getGradesBySchool);
+  const myPlansRaw = useQuery(api.academics.lessonPlans.getPlansByStaff);
+
+  const isLoading = subjectsRaw === undefined || gradesRaw === undefined || myPlansRaw === undefined;
+  const subjects = subjectsRaw ?? [];
+  const grades = gradesRaw ?? [];
+  const myPlans = myPlansRaw ?? [];
+
+  const deletePlanMutation = useMutation(api.academics.lessonPlans.deletePlan);
+  const duplicatePlanMutation = useMutation(api.academics.lessonPlans.duplicatePlan);
 
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,10 +83,12 @@ export default function LessonPlansPage() {
     return matchesSearch && matchesSubject && matchesGrade && matchesStatus;
   });
 
-  const totalPages = Math.ceil(filteredPlans.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredPlans.length / itemsPerPage));
+  const clampedPage = Math.min(currentPage, totalPages);
+  if (clampedPage !== currentPage) setCurrentPage(clampedPage);
   const paginatedPlans = filteredPlans.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    (clampedPage - 1) * itemsPerPage,
+    clampedPage * itemsPerPage,
   );
 
   const stats = {
@@ -83,6 +96,14 @@ export default function LessonPlansPage() {
     published: myPlans.filter((p) => p.status === 'published').length,
     drafts: myPlans.filter((p) => p.status === 'draft').length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 pb-10">
@@ -358,20 +379,37 @@ export default function LessonPlansPage() {
                           <Edit2 className="h-4 w-4" />
                         </Button>
                         <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
+                          <DropdownMenuTrigger
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <MoreVertical className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                            <DropdownMenuItem className="flex items-center gap-2 py-2">
+                            <DropdownMenuItem
+                              className="flex items-center gap-2 py-2"
+                              onSelect={async () => {
+                                try {
+                                  await duplicatePlanMutation({ id: plan._id as Id<'lessonPlans'> });
+                                  toast.success('Lesson plan duplicated.');
+                                } catch (e) {
+                                  toast.error((e as Error).message || 'Failed to duplicate plan.');
+                                }
+                              }}
+                            >
                               <FileText className="h-4 w-4" /> Duplicate
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="flex items-center gap-2 py-2 text-red-600 focus:bg-red-50 focus:text-red-700">
+                            <DropdownMenuItem
+                              className="flex items-center gap-2 py-2 text-red-600 focus:bg-red-50 focus:text-red-700"
+                              onSelect={async () => {
+                                if (!confirm('Are you sure you want to delete this lesson plan?')) return;
+                                try {
+                                  await deletePlanMutation({ id: plan._id as Id<'lessonPlans'> });
+                                  toast.success('Lesson plan deleted.');
+                                } catch (e) {
+                                  toast.error((e as Error).message || 'Failed to delete plan.');
+                                }
+                              }}
+                            >
                               <Trash2 className="h-4 w-4" /> Delete Plan
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -437,13 +475,12 @@ export default function LessonPlansPage() {
             </Button>
 
             <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-                let pageNum = i + 1;
-                if (totalPages > 5 && currentPage > 3) {
-                  pageNum = currentPage - 2 + i;
-                  if (pageNum + 4 > totalPages) pageNum = totalPages - 4;
-                }
-                if (pageNum < 1) pageNum = 1;
+              {(() => {
+                const startPage = totalPages <= 5
+                  ? 1
+                  : Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                return Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                const pageNum = startPage + i;
                 if (pageNum > totalPages) return null;
 
                 return (
@@ -462,7 +499,8 @@ export default function LessonPlansPage() {
                     {pageNum}
                   </Button>
                 );
-              })}
+              });
+              })()}
             </div>
 
             <Button

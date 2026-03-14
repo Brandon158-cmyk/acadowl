@@ -56,6 +56,32 @@ export const updateGrade = mutation({
   },
 });
 
+export const deleteGrade = mutation({
+  args: { id: v.id('grades') },
+  handler: async (ctx, args) => {
+    const { school } = await requirePermission(ctx, Permission.MANAGE_SCHOOL_SETTINGS);
+
+    const grade = await ctx.db.get(args.id);
+    if (!grade || grade.schoolId !== school._id) {
+      throwEduError(EduError.NOT_FOUND, 'Grade not found.');
+    }
+
+    // Check for dependent sections
+    const sections = await ctx.db
+      .query('sections')
+      .withIndex('by_grade', (q) => q.eq('schoolId', school._id).eq('gradeId', args.id))
+      .first();
+    if (sections) {
+      throwEduError(
+        EduError.VALIDATION_ERROR,
+        'Cannot delete a grade that has sections. Remove all sections first.',
+      );
+    }
+
+    await ctx.db.delete(args.id);
+  },
+});
+
 export const getGradesBySchool = query({
   args: {},
   handler: async (ctx) => {

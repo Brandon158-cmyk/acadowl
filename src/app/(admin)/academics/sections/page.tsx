@@ -661,9 +661,8 @@ function GradeRow({
 // ─── Staff Dropdown (teaching staff only) ─────────────────────────────────
 
 function StaffDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  // Note: Requires staff module to be built (Epic 5).
-  // For now, returns empty — will auto-populate once staff backend is live.
-  const staff: Array<{ _id: string; firstName: string; lastName: string; jobTitle: string }> = [];
+  const allStaff = useQuery(api.staff.queries.getAllStaff, { status: 'active' }) ?? [];
+  const staff = allStaff.filter((s) => s.staffCategory === 'teaching');
 
   return (
     <Select value={value} onValueChange={(v) => onChange(v ?? '')}>

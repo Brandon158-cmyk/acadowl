@@ -328,6 +328,17 @@ export default function EnrolStudentPage() {
       if (!primaryGuardian.phone.trim())
         newErrors['guardian.phone'] = 'Guardian phone is required';
       if (!primaryGuardian.relation) newErrors['guardian.relation'] = 'Relation is required';
+
+      if (hasSecondGuardian) {
+        if (!secondGuardian.firstName.trim())
+          newErrors['secondGuardian.firstName'] = 'Second guardian first name is required';
+        if (!secondGuardian.lastName.trim())
+          newErrors['secondGuardian.lastName'] = 'Second guardian last name is required';
+        if (!secondGuardian.phone.trim())
+          newErrors['secondGuardian.phone'] = 'Second guardian phone is required';
+        if (!secondGuardian.relation)
+          newErrors['secondGuardian.relation'] = 'Second guardian relation is required';
+      }
     }
 
     setErrors(newErrors);

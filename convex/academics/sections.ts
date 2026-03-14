@@ -49,6 +49,15 @@ export const createSection = mutation({
           'Staff member not found or does not belong to your school.',
         );
       }
+
+      // If this teacher is already the class teacher of another section, clear that assignment
+      if (teacher.classSectionId) {
+        const oldSection = await ctx.db.get(teacher.classSectionId);
+        if (oldSection && oldSection.classTeacherId === args.classTeacherId) {
+          await ctx.db.patch(teacher.classSectionId, { classTeacherId: undefined });
+        }
+        await ctx.db.patch(args.classTeacherId, { classSectionId: undefined });
+      }
     }
 
     // Enforce unique name within grade × academic year

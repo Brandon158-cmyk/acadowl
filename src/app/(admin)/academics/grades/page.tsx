@@ -54,6 +54,7 @@ export default function GradesPage() {
   const seedGrades = useMutation(api.academics.grades.seedDefaultGrades);
   const createGrade = useMutation(api.academics.grades.createGrade);
   const updateGrade = useMutation(api.academics.grades.updateGrade);
+  const deleteGradeMutation = useMutation(api.academics.grades.deleteGrade);
 
   const [isSeedLoading, setIsSeedLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -335,7 +336,7 @@ export default function GradesPage() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-gray-400 hover:text-[#2D9B4E]"
-                            disabled={index === 0 && currentPage === 1}
+                            disabled={grade.order === 1}
                             onClick={() => handleMove(grade._id, 'up', grade.order)}
                           >
                             <ArrowUp className="h-3.5 w-3.5" />
@@ -344,9 +345,7 @@ export default function GradesPage() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-gray-400 hover:text-red-500"
-                            disabled={
-                              index === paginatedGrades.length - 1 && currentPage === totalPages
-                            }
+                            disabled={grade.order === grades.length}
                             onClick={() => handleMove(grade._id, 'down', grade.order)}
                           >
                             <ArrowDown className="h-3.5 w-3.5" />
@@ -424,6 +423,15 @@ export default function GradesPage() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                          onClick={async () => {
+                            if (!confirm(`Delete grade "${grade.name}"? This cannot be undone.`)) return;
+                            try {
+                              await deleteGradeMutation({ id: grade._id });
+                              toast.success(`Grade "${grade.name}" deleted.`);
+                            } catch (e) {
+                              toast.error((e as Error).message || 'Failed to delete grade.');
+                            }
+                          }}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

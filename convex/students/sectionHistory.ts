@@ -110,6 +110,14 @@ export const transferBetweenSections = mutation({
       await ctx.db.patch(currentRecord._id, { toDate: today });
     }
 
+    // Validate gradeId before recording history
+    if (!student.currentGradeId) {
+      throwEduError(
+        EduError.VALIDATION_ERROR,
+        'Student has no current grade assigned. Cannot record section transfer.',
+      );
+    }
+
     // Create new sectionHistory record
     await ctx.db.insert('sectionHistory', {
       schoolId: school._id,

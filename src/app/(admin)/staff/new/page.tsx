@@ -285,7 +285,7 @@ export default function AddStaffPage() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-gray-500">
-                Phone Number <span className="text-red-500">*</span>
+                Phone Number
               </Label>
               <Input
                 value={form.phone}
@@ -312,6 +312,9 @@ export default function AddStaffPage() {
                 placeholder="e.g. john.phiri@school.edu.zm"
               />
             </div>
+            <p className="col-span-full text-xs text-gray-400">
+              At least one of Phone or Email is required.
+            </p>
             <div className="space-y-1.5">
               <Label className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
                 <MapPin className="h-3.5 w-3.5" />

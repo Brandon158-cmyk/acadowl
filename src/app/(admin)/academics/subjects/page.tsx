@@ -542,32 +542,32 @@ export default function SubjectsPage() {
               </Button>
 
               <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-                  let pageNum = i + 1;
-                  if (totalPages > 5 && currentPage > 3) {
-                    pageNum = currentPage - 3 + i;
-                    if (pageNum + 4 > totalPages) pageNum = totalPages - 4;
-                  }
-                  if (pageNum < 1) pageNum = 1;
-                  if (pageNum > totalPages) return null;
+                {(() => {
+                  const startPage = totalPages <= 5
+                    ? 1
+                    : Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                  return Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                    const pageNum = startPage + i;
+                    if (pageNum > totalPages) return null;
 
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? 'default' : 'outline'}
-                      size="sm"
-                      className={cn(
-                        'h-9 w-9 rounded-lg p-0',
-                        currentPage === pageNum
-                          ? 'bg-[#2D9B4E] hover:bg-[#217A3C]'
-                          : 'border-gray-200',
-                      )}
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? 'default' : 'outline'}
+                        size="sm"
+                        className={cn(
+                          'h-9 w-9 rounded-lg p-0',
+                          currentPage === pageNum
+                            ? 'bg-[#2D9B4E] hover:bg-[#217A3C]'
+                            : 'border-gray-200',
+                        )}
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  });
+                })()}
               </div>
 
               <Button
@@ -674,19 +674,28 @@ export default function SubjectsPage() {
                             'flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-all',
                             isSelected ? 'bg-green-50' : 'hover:bg-gray-50',
                           )}
-                          onClick={() =>
+                          onClick={(e) => {
+                            // Prevent double-toggle when click originates from Checkbox
+                            if ((e.target as HTMLElement).closest('[data-slot="checkbox"]')) return;
                             setNewSubject((prev) => ({
                               ...prev,
                               gradeIds: isSelected
                                 ? prev.gradeIds.filter((id) => id !== g._id)
                                 : [...prev.gradeIds, g._id],
-                            }))
-                          }
+                            }));
+                          }}
                         >
                           <Checkbox
                             checked={isSelected}
                             className="h-5 w-5 border-gray-300 data-[state=checked]:border-[#2D9B4E] data-[state=checked]:bg-[#2D9B4E]"
-                            onCheckedChange={() => {}} // Handled by div onClick
+                            onCheckedChange={() => {
+                              setNewSubject((prev) => ({
+                                ...prev,
+                                gradeIds: isSelected
+                                  ? prev.gradeIds.filter((id) => id !== g._id)
+                                  : [...prev.gradeIds, g._id],
+                              }));
+                            }}
                           />
                           <span
                             className={cn(

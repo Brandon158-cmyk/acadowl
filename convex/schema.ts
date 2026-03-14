@@ -97,6 +97,23 @@ const schema = defineSchema({
       }),
     ),
 
+    // Period configuration — ISSUE-064
+    periodConfig: v.optional(
+      v.object({
+        periodsPerDay: v.number(),
+        periods: v.array(
+          v.object({
+            number: v.number(),
+            label: v.string(),
+            startTime: v.string(),
+            endTime: v.string(),
+            isBreak: v.boolean(),
+            isOptional: v.boolean(),
+          }),
+        ),
+      }),
+    ),
+
     // Onboarding — ISSUE-037
     onboardingComplete: v.optional(v.boolean()),
 
@@ -469,10 +486,14 @@ const schema = defineSchema({
     endTime: v.string(),
     room: v.optional(v.string()),
     termId: v.id('terms'),
+    isPublished: v.boolean(),
+    week: v.optional(v.string()),
+    notes: v.optional(v.string()),
   })
     .index('by_school', ['schoolId'])
     .index('by_section', ['sectionId'])
-    .index('by_staff', ['staffId']),
+    .index('by_staff', ['staffId'])
+    .index('by_section_term', ['sectionId', 'termId']),
 
   // ── EXAMS (Sprint 01) ──
   examSessions: defineTable({

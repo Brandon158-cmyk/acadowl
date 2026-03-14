@@ -10,7 +10,6 @@ import { EduError, throwEduError } from '../_lib/errors';
 /**
  * Initiate an outgoing transfer for a student.
  * - Updates student status to 'transferred_out'
- * - Clears currentSectionId
  * - Creates a transfer record
  * - Sends notification to guardian
  */

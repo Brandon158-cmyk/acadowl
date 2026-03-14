@@ -180,6 +180,14 @@ export const createUserAndStaff = mutation({
   handler: async (ctx, args) => {
     const { school } = await requirePermission(ctx, Permission.CREATE_STAFF);
 
+    // Validate at least one contact method
+    if (!args.phone?.trim() && !args.email?.trim()) {
+      throwEduError(
+        EduError.VALIDATION_ERROR,
+        'At least one contact method (phone or email) is required.',
+      );
+    }
+
     // Check for duplicate email in this school
     if (args.email) {
       const existingEmail = await ctx.db

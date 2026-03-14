@@ -157,6 +157,9 @@ export const enrolStudent = mutation({
 
     // Validate DOB — student must be at least 3 years old
     const dob = new Date(args.dateOfBirth);
+    if (Number.isNaN(dob.getTime())) {
+      throwEduError(EduError.VALIDATION_ERROR, `Invalid date of birth: "${args.dateOfBirth}".`);
+    }
     const now = new Date();
     const ageDiff = now.getFullYear() - dob.getFullYear();
     const monthDiff = now.getMonth() - dob.getMonth();
@@ -193,11 +196,17 @@ export const enrolStudent = mutation({
       }
     } else {
       const academicYear = await ctx.db.get(school.currentAcademicYearId);
+      if (!academicYear) {
+        throwEduError(
+          EduError.VALIDATION_ERROR,
+          'Active academic year record not found. Please contact your administrator.',
+        );
+      }
       studentNumber = await generateStudentNumber(
         ctx,
         school._id,
         school.shortName,
-        academicYear!.year,
+        academicYear.year,
       );
     }
 
@@ -237,17 +246,27 @@ export const enrolStudent = mutation({
 
     if (args.secondGuardian) {
       const guardianId = await findOrCreateGuardian(ctx, school._id, args.secondGuardian);
-      guardianLinks.push({
-        guardianId,
-        isPrimary: false,
-        relation: args.secondGuardian.relation,
-        canPayFees: args.secondGuardian.canPayFees,
-        canSeeResults: args.secondGuardian.canSeeResults,
-        canSeeAttendance: args.secondGuardian.canSeeAttendance,
-        receiveSMS: args.secondGuardian.receiveSMS,
-        canAuthorizeLeave: false,
-        isEmergencyContact: args.secondGuardian.isEmergencyContact,
-      });
+      const existingLink = guardianLinks.find((l) => l.guardianId === guardianId);
+      if (existingLink) {
+        // Same guardian — merge: keep primary=true, merge permissions preferring true
+        existingLink.canPayFees = existingLink.canPayFees || args.secondGuardian.canPayFees;
+        existingLink.canSeeResults = existingLink.canSeeResults || args.secondGuardian.canSeeResults;
+        existingLink.canSeeAttendance = existingLink.canSeeAttendance || args.secondGuardian.canSeeAttendance;
+        existingLink.receiveSMS = existingLink.receiveSMS || args.secondGuardian.receiveSMS;
+        existingLink.isEmergencyContact = existingLink.isEmergencyContact || args.secondGuardian.isEmergencyContact;
+      } else {
+        guardianLinks.push({
+          guardianId,
+          isPrimary: false,
+          relation: args.secondGuardian.relation,
+          canPayFees: args.secondGuardian.canPayFees,
+          canSeeResults: args.secondGuardian.canSeeResults,
+          canSeeAttendance: args.secondGuardian.canSeeAttendance,
+          receiveSMS: args.secondGuardian.receiveSMS,
+          canAuthorizeLeave: false,
+          isEmergencyContact: args.secondGuardian.isEmergencyContact,
+        });
+      }
     }
 
     const studentId = await ctx.db.insert('students', {
@@ -322,11 +341,14 @@ async function findOrCreateGuardian(
     relation: string;
   },
 ): Promise<Id<'guardians'>> {
+  // Normalize phone once for consistent lookup and storage
+  const phone = guardian.phone.trim();
+
   // Search for existing guardian in this school by phone
   const existing = await ctx.db
     .query('guardians')
     .withIndex('by_school_phone', (q) =>
-      q.eq('schoolId', schoolId).eq('phone', guardian.phone),
+      q.eq('schoolId', schoolId).eq('phone', phone),
     )
     .first();
 
@@ -335,9 +357,9 @@ async function findOrCreateGuardian(
   // Create a user record for the guardian
   const userId = await ctx.db.insert('users', {
     schoolId,
-    phone: guardian.phone,
-    email: guardian.email,
-    name: `${guardian.firstName} ${guardian.lastName}`,
+    phone,
+    email: guardian.email?.trim(),
+    name: `${guardian.firstName.trim()} ${guardian.lastName.trim()}`,
     role: 'guardian',
     isActive: true,
     isFirstLogin: true,
@@ -351,7 +373,7 @@ async function findOrCreateGuardian(
     userId,
     firstName: guardian.firstName.trim(),
     lastName: guardian.lastName.trim(),
-    phone: guardian.phone.trim(),
+    phone,
     altPhone: guardian.altPhone?.trim(),
     email: guardian.email?.trim(),
     nrc: guardian.nrc?.trim(),
@@ -510,11 +532,25 @@ export const bulkChangeSection = mutation({
       throwEduError(EduError.NOT_FOUND, 'Target section not found.');
     }
 
+    // Check capacity (mirrors changeStudentSection)
+    let availableSlots = Infinity;
+    if (newSection.capacity) {
+      const currentEnrolled = await ctx.db
+        .query('students')
+        .withIndex('by_section', (q) => q.eq('currentSectionId', args.newSectionId))
+        .filter((q) => q.eq(q.field('status'), 'active'))
+        .collect();
+      availableSlots = Math.max(0, newSection.capacity - currentEnrolled.length);
+    }
+
     let moved = 0;
     for (const studentId of args.studentIds) {
+      if (moved >= availableSlots) break;
+
       const student = await ctx.db.get(studentId);
       if (!student || student.schoolId !== school._id) continue;
       if (student.currentGradeId !== newSection.gradeId) continue;
+      if (student.currentSectionId === args.newSectionId) continue;
 
       await ctx.db.patch(studentId, {
         currentSectionId: args.newSectionId,

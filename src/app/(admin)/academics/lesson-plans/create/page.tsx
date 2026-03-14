@@ -32,15 +32,16 @@ export default function CreateLessonPlanPage() {
 
   const handleStartDraft = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!subjectId || !gradeId) {
       toast.error('Subject and Grade are required to start a draft.');
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
       const id = await createPlan({
-        title: title || 'Untitled Draft',
+        title: title.trim() || 'Untitled Draft',
         subjectId: subjectId as Id<'subjects'>,
         gradeId: gradeId as Id<'grades'>,
         status: 'draft',
@@ -53,6 +54,7 @@ export default function CreateLessonPlanPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to start draft.';
       toast.error(errorMessage);
+    } finally {
       setIsSubmitting(false);
     }
   };

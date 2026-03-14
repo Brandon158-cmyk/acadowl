@@ -2,7 +2,7 @@
 
 import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -111,10 +111,12 @@ export default function StudentsPage() {
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     setPage(0);
-    // Simple debounce with setTimeout
-    const timer = setTimeout(() => setDebouncedSearch(value), 300);
-    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // ── Data fetching ──
   const grades = useQuery(api.academics.grades.getGradesBySchool) ?? [];
@@ -143,11 +145,11 @@ export default function StudentsPage() {
   const toggleSelectAll = () => {
     if (allOnPageSelected) {
       const newSet = new Set(selectedIds);
-      students.forEach((s) => newSet.delete(s._id));
+      students.forEach((s) => { newSet.delete(s._id); });
       setSelectedIds(newSet);
     } else {
       const newSet = new Set(selectedIds);
-      students.forEach((s) => newSet.add(s._id));
+      students.forEach((s) => { newSet.add(s._id); });
       setSelectedIds(newSet);
     }
   };
@@ -400,7 +402,9 @@ export default function StudentsPage() {
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 text-xs text-white hover:bg-white/20 hover:text-white"
+              className="h-8 text-xs text-white/50"
+              disabled
+              title="Export CSV is not yet available"
             >
               <Download className="mr-1.5 h-3.5 w-3.5" />
               Export CSV

@@ -171,7 +171,15 @@ export const getLeaveRequestsForStaff = query({
     staffId: v.id('staff'),
   },
   handler: async (ctx, args) => {
-    const { school } = await getAuthenticatedUserAndSchool(ctx);
+    const { user, school } = await getAuthenticatedUserAndSchool(ctx);
+
+    // Only allow self-access or elevated roles
+    const isSelf = user.staffId === args.staffId;
+    const elevatedRoles = ['platform_admin', 'school_admin', 'deputy_head', 'bursar'];
+    const isElevated = !!user.role && elevatedRoles.includes(user.role);
+    if (!isSelf && !isElevated) {
+      throwEduError(EduError.FORBIDDEN, 'You can only view your own leave requests.');
+    }
 
     const staff = await ctx.db.get(args.staffId);
     if (!staff || staff.schoolId !== school._id) {
@@ -205,7 +213,7 @@ export const getLeaveRequestsForStaff = query({
 export const getPendingLeaveRequests = query({
   args: {},
   handler: async (ctx) => {
-    const { school } = await getAuthenticatedUserAndSchool(ctx);
+    const { school } = await requirePermission(ctx, Permission.MANAGE_SCHOOL_SETTINGS);
 
     const requests = await ctx.db
       .query('leaveRequests')
@@ -242,7 +250,7 @@ export const getAllLeaveRequests = query({
     ),
   },
   handler: async (ctx, args) => {
-    const { school } = await getAuthenticatedUserAndSchool(ctx);
+    const { school } = await requirePermission(ctx, Permission.MANAGE_SCHOOL_SETTINGS);
 
     let requests;
     if (args.status) {

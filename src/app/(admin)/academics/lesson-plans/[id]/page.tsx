@@ -573,15 +573,14 @@ export default function LessonPlanEditorPage({ params }: { params: Promise<{ id:
 
                           <div className="flex items-center gap-1 opacity-100 transition-opacity group-hover:opacity-100 sm:opacity-0">
                             {resolvedUrl && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+                              <a
+                                href={resolvedUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-900"
                               >
-                                <a href={resolvedUrl} target="_blank" rel="noreferrer">
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                </a>
-                              </Button>
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
                             )}
                             <Button
                               variant="ghost"

@@ -175,7 +175,16 @@ export const updateGuardianLink = mutation({
       throwEduError(EduError.NOT_FOUND, 'Student not found.');
     }
 
-    const updatedLinks = (student!.guardianLinks || []).map((link) => {
+    const links = student!.guardianLinks || [];
+    const targetLink = links.find((link) => link.guardianId === args.guardianId);
+    if (!targetLink) {
+      throwEduError(
+        EduError.NOT_FOUND,
+        'Guardian is not linked to this student.',
+      );
+    }
+
+    const updatedLinks = links.map((link) => {
       if (link.guardianId !== args.guardianId) {
         // If setting new primary, demote others
         if (args.isPrimary) {

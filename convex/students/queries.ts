@@ -163,12 +163,17 @@ export const searchStudents = query({
   },
   handler: async (ctx, args) => {
     const { school } = await getAuthenticatedUserAndSchool(ctx);
-    const pageSize = args.limit ?? 50;
+    const rawLimit = args.limit ?? 50;
+    const pageSize = Math.max(1, Math.min(100, Math.floor(rawLimit)));
 
     // Start with school-scoped query
     let studentsQuery;
 
     if (args.sectionId) {
+      const section = await ctx.db.get(args.sectionId);
+      if (!section || section.schoolId !== school._id) {
+        throwEduError(EduError.NOT_FOUND, 'Section not found.');
+      }
       studentsQuery = ctx.db
         .query('students')
         .withIndex('by_section', (q) => q.eq('currentSectionId', args.sectionId!));
@@ -229,7 +234,8 @@ export const searchStudents = query({
     });
 
     // Simple offset-based pagination using cursor as offset
-    const offset = args.cursor ? parseInt(args.cursor, 10) : 0;
+    const parsedOffset = args.cursor ? parseInt(args.cursor, 10) : 0;
+    const offset = Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
     const totalCount = students.length;
     const page = students.slice(offset, offset + pageSize);
     const nextCursor = offset + pageSize < totalCount ? String(offset + pageSize) : undefined;

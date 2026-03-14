@@ -137,6 +137,64 @@ export const updatePlan = mutation({
   },
 });
 
+export const deletePlan = mutation({
+  args: { id: v.id('lessonPlans') },
+  handler: async (ctx, args) => {
+    const { school, user } = await getAuthenticatedUserAndSchool(ctx);
+
+    const plan = await ctx.db.get(args.id);
+    if (!plan || plan.schoolId !== school._id) {
+      throwEduError(EduError.NOT_FOUND, 'Lesson plan not found.');
+    }
+
+    const isAdmin = user.role === 'school_admin' || user.role === 'platform_admin';
+    const staff = await ctx.db
+      .query('staff')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .first();
+    const isOwner = staff && staff._id === plan.staffId;
+    if (!isAdmin && !isOwner) {
+      throwEduError(EduError.FORBIDDEN, 'You do not have permission to delete this lesson plan.');
+    }
+
+    await ctx.db.delete(args.id);
+  },
+});
+
+export const duplicatePlan = mutation({
+  args: { id: v.id('lessonPlans') },
+  handler: async (ctx, args) => {
+    const { school, user } = await getAuthenticatedUserAndSchool(ctx);
+
+    const plan = await ctx.db.get(args.id);
+    if (!plan || plan.schoolId !== school._id) {
+      throwEduError(EduError.NOT_FOUND, 'Lesson plan not found.');
+    }
+
+    const staff = await ctx.db
+      .query('staff')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .first();
+
+    return await ctx.db.insert('lessonPlans', {
+      schoolId: school._id,
+      staffId: staff?.schoolId === school._id ? staff._id : undefined,
+      subjectId: plan.subjectId,
+      gradeId: plan.gradeId,
+      title: `${plan.title} (Copy)`,
+      content: plan.content,
+      status: 'draft' as const,
+      syllabusTopicRef: plan.syllabusTopicRef,
+      learningObjectives: plan.learningObjectives,
+      duration: plan.duration,
+      resources: plan.resources,
+      visibility: plan.visibility,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
 export const getPlanById = query({
   args: { id: v.id('lessonPlans') },
   handler: async (ctx, args) => {
