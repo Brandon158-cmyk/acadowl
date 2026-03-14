@@ -34,6 +34,13 @@ import type * as schools_schoolEvents from "../schools/schoolEvents.js";
 import type * as schools_terms from "../schools/terms.js";
 import type * as schools_validation from "../schools/validation.js";
 import type * as seed from "../seed.js";
+import type * as students_documents from "../students/documents.js";
+import type * as students_guardians from "../students/guardians.js";
+import type * as students_idCards from "../students/idCards.js";
+import type * as students_mutations from "../students/mutations.js";
+import type * as students_promotions from "../students/promotions.js";
+import type * as students_queries from "../students/queries.js";
+import type * as students_transfers from "../students/transfers.js";
 import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
 
@@ -70,6 +77,13 @@ declare const fullApi: ApiFromModules<{
   "schools/terms": typeof schools_terms;
   "schools/validation": typeof schools_validation;
   seed: typeof seed;
+  "students/documents": typeof students_documents;
+  "students/guardians": typeof students_guardians;
+  "students/idCards": typeof students_idCards;
+  "students/mutations": typeof students_mutations;
+  "students/promotions": typeof students_promotions;
+  "students/queries": typeof students_queries;
+  "students/transfers": typeof students_transfers;
   "users/mutations": typeof users_mutations;
   "users/queries": typeof users_queries;
 }>;

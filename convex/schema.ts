@@ -963,6 +963,55 @@ const schema = defineSchema({
     .index('by_academic_year', ['schoolId', 'academicYearId'])
     .index('by_school_start', ['schoolId', 'startDate']),
 
+  // ── COUNTERS (Sprint 01 — ISSUE-048) ──
+  // Atomic counters for auto-generating student numbers, invoice numbers, etc.
+  counters: defineTable({
+    schoolId: v.id('schools'),
+    key: v.string(), // e.g. 'student_number_2025', 'invoice_number_2025'
+    value: v.number(), // Current counter value
+  }).index('by_school_key', ['schoolId', 'key']),
+
+  // ── STUDENT DOCUMENTS (Sprint 01 — ISSUE-052) ──
+  studentDocuments: defineTable({
+    schoolId: v.id('schools'),
+    studentId: v.id('students'),
+    type: v.union(
+      v.literal('birth_certificate'),
+      v.literal('nrc'),
+      v.literal('medical_certificate'),
+      v.literal('transfer_letter'),
+      v.literal('report_card'),
+      v.literal('id_photo'),
+      v.literal('other'),
+    ),
+    title: v.string(),
+    storageId: v.id('_storage'), // Convex file storage reference
+    fileType: v.string(), // 'pdf', 'jpg', 'png'
+    uploadedBy: v.id('users'),
+    uploadedAt: v.number(),
+    notes: v.optional(v.string()),
+  })
+    .index('by_student', ['studentId'])
+    .index('by_school', ['schoolId']),
+
+  // ── TRANSFERS (Sprint 01 — ISSUE-053) ──
+  transfers: defineTable({
+    schoolId: v.id('schools'),
+    studentId: v.id('students'),
+    direction: v.union(v.literal('in'), v.literal('out')),
+    fromSchool: v.optional(v.string()),
+    toSchool: v.optional(v.string()),
+    reason: v.string(),
+    transferDate: v.string(),
+    processedBy: v.id('users'),
+    transferLetterStorageId: v.optional(v.id('_storage')),
+    approvedBy: v.optional(v.id('users')),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_student', ['studentId'])
+    .index('by_school', ['schoolId']),
+
   // ── CONVEX AUTH TABLES ──
   // Required by @convex-dev/auth
   authAccounts: defineTable({

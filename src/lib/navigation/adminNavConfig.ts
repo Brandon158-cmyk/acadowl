@@ -56,6 +56,26 @@ export const adminNavConfig: NavItem[] = [
         href: '/students',
         icon: GraduationCap,
         requiredPermission: Permission.VIEW_STUDENTS,
+        children: [
+          {
+            label: 'All Students',
+            href: '/students',
+            icon: GraduationCap,
+            requiredPermission: Permission.VIEW_STUDENTS,
+          },
+          {
+            label: 'Enrol Student',
+            href: '/students/enrol',
+            icon: UserCog,
+            requiredPermission: Permission.ENROL_STUDENT,
+          },
+          {
+            label: 'Year-End Promotion',
+            href: '/students/promotion',
+            icon: GraduationCap,
+            requiredPermission: Permission.PROMOTE_STUDENTS,
+          },
+        ],
       },
       {
         label: 'Staff',
