@@ -7,8 +7,9 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, UserPlus, Settings2, UserX } from 'lucide-react';
+import { Loader2, UserPlus, Settings2, UserX, ExternalLink } from 'lucide-react';
 import { Role } from '@/lib/roles/types';
+import Link from 'next/link';
 
 export default function UserManagementPage() {
   const users = useQuery(api.users.queries.getUsersBySchool) || [];
@@ -45,10 +46,13 @@ export default function UserManagementPage() {
         title="User Management"
         description="Manage access and roles for staff and administrators."
       >
-        <Button>
+        <Link
+          href="/staff/new"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
           <UserPlus className="mr-2 h-4 w-4" />
           Add User
-        </Button>
+        </Link>
       </PageHeader>
 
       <Card>
@@ -101,7 +105,15 @@ export default function UserManagementPage() {
                           {u.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-right">
+                      <td className="px-4 py-4 text-right space-x-1">
+                        {u.staffId && (
+                          <Link href={`/staff/${u.staffId}`}>
+                            <Button variant="ghost" size="sm" className="h-8 px-2 text-blue-600 hover:text-blue-700">
+                              <ExternalLink className="mr-1 h-3 w-3" />
+                              Staff Profile
+                            </Button>
+                          </Link>
+                        )}
                         {u.isActive && (
                           <Button
                             variant="ghost"

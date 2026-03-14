@@ -97,6 +97,23 @@ const schema = defineSchema({
       }),
     ),
 
+    // Period configuration — ISSUE-064
+    periodConfig: v.optional(
+      v.object({
+        periodsPerDay: v.number(),
+        periods: v.array(
+          v.object({
+            number: v.number(),
+            label: v.string(),
+            startTime: v.string(),
+            endTime: v.string(),
+            isBreak: v.boolean(),
+            isOptional: v.boolean(),
+          }),
+        ),
+      }),
+    ),
+
     // Onboarding — ISSUE-037
     onboardingComplete: v.optional(v.boolean()),
 
@@ -469,10 +486,14 @@ const schema = defineSchema({
     endTime: v.string(),
     room: v.optional(v.string()),
     termId: v.id('terms'),
+    isPublished: v.boolean(),
+    week: v.optional(v.string()),
+    notes: v.optional(v.string()),
   })
     .index('by_school', ['schoolId'])
     .index('by_section', ['sectionId'])
-    .index('by_staff', ['staffId']),
+    .index('by_staff', ['staffId'])
+    .index('by_section_term', ['sectionId', 'termId']),
 
   // ── EXAMS (Sprint 01) ──
   examSessions: defineTable({
@@ -962,6 +983,147 @@ const schema = defineSchema({
     .index('by_school', ['schoolId'])
     .index('by_academic_year', ['schoolId', 'academicYearId'])
     .index('by_school_start', ['schoolId', 'startDate']),
+
+  // ── COUNTERS (Sprint 01 — ISSUE-048) ──
+  // Atomic counters for auto-generating student numbers, invoice numbers, etc.
+  counters: defineTable({
+    schoolId: v.id('schools'),
+    key: v.string(), // e.g. 'student_number_2025', 'invoice_number_2025'
+    value: v.number(), // Current counter value
+  }).index('by_school_key', ['schoolId', 'key']),
+
+  // ── STUDENT DOCUMENTS (Sprint 01 — ISSUE-052) ──
+  studentDocuments: defineTable({
+    schoolId: v.id('schools'),
+    studentId: v.id('students'),
+    type: v.union(
+      v.literal('birth_certificate'),
+      v.literal('nrc'),
+      v.literal('medical_certificate'),
+      v.literal('transfer_letter'),
+      v.literal('report_card'),
+      v.literal('id_photo'),
+      v.literal('other'),
+    ),
+    title: v.string(),
+    storageId: v.id('_storage'), // Convex file storage reference
+    fileType: v.string(), // 'pdf', 'jpg', 'png'
+    uploadedBy: v.id('users'),
+    uploadedAt: v.number(),
+    notes: v.optional(v.string()),
+  })
+    .index('by_student', ['studentId'])
+    .index('by_school', ['schoolId']),
+
+  // ── TRANSFERS (Sprint 01 — ISSUE-053) ──
+  transfers: defineTable({
+    schoolId: v.id('schools'),
+    studentId: v.id('students'),
+    direction: v.union(v.literal('in'), v.literal('out')),
+    fromSchool: v.optional(v.string()),
+    toSchool: v.optional(v.string()),
+    reason: v.string(),
+    transferDate: v.string(),
+    processedBy: v.id('users'),
+    transferLetterStorageId: v.optional(v.id('_storage')),
+    approvedBy: v.optional(v.id('users')),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_student', ['studentId'])
+    .index('by_school', ['schoolId']),
+
+  // ── SECTION HISTORY (Sprint 01 — ISSUE-056) ──
+  // Audit trail of every section placement change for a student
+  sectionHistory: defineTable({
+    schoolId: v.id('schools'),
+    studentId: v.id('students'),
+    sectionId: v.id('sections'),
+    gradeId: v.id('grades'),
+    academicYearId: v.id('academicYears'),
+    fromDate: v.string(),
+    toDate: v.optional(v.string()), // Null if current placement
+    reason: v.union(
+      v.literal('initial_enrolment'),
+      v.literal('section_transfer'),
+      v.literal('grade_promotion'),
+      v.literal('grade_repeat'),
+      v.literal('year_end'),
+    ),
+    changedBy: v.id('users'),
+    createdAt: v.number(),
+  })
+    .index('by_student', ['studentId'])
+    .index('by_school', ['schoolId']),
+
+  // ── STAFF SUBJECT ASSIGNMENTS (Sprint 01 — ISSUE-059) ──
+  staffSubjectAssignments: defineTable({
+    schoolId: v.id('schools'),
+    staffId: v.id('staff'),
+    subjectId: v.id('subjects'),
+    sectionId: v.id('sections'),
+    academicYearId: v.id('academicYears'),
+    termId: v.optional(v.id('terms')), // Null = all terms; set if one-term assignment
+    isPrimaryTeacher: v.boolean(), // Can there be a second/substitute teacher?
+    createdAt: v.number(),
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_staff', ['staffId'])
+    .index('by_section', ['sectionId'])
+    .index('by_subject_section', ['subjectId', 'sectionId']),
+
+  // ── STAFF ATTENDANCE (Sprint 01 — ISSUE-060) ──
+  staffAttendance: defineTable({
+    schoolId: v.id('schools'),
+    staffId: v.id('staff'),
+    date: v.string(),
+    status: v.union(
+      v.literal('present'),
+      v.literal('absent'),
+      v.literal('on_leave'),
+      v.literal('late'),
+    ),
+    leaveType: v.optional(
+      v.union(
+        v.literal('annual'),
+        v.literal('sick'),
+        v.literal('maternity_paternity'),
+        v.literal('compassionate'),
+        v.literal('unpaid'),
+      ),
+    ),
+    notes: v.optional(v.string()),
+    markedBy: v.id('users'),
+    createdAt: v.number(),
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_staff_date', ['staffId', 'date'])
+    .index('by_school_date', ['schoolId', 'date']),
+
+  // ── LEAVE REQUESTS (Sprint 01 — ISSUE-061) ──
+  leaveRequests: defineTable({
+    schoolId: v.id('schools'),
+    staffId: v.id('staff'),
+    leaveType: v.union(
+      v.literal('annual'),
+      v.literal('sick'),
+      v.literal('maternity_paternity'),
+      v.literal('compassionate'),
+      v.literal('unpaid'),
+    ),
+    startDate: v.string(),
+    endDate: v.string(),
+    daysRequested: v.number(),
+    reason: v.string(),
+    status: v.union(v.literal('pending'), v.literal('approved'), v.literal('rejected')),
+    approvedBy: v.optional(v.id('users')),
+    responseNote: v.optional(v.string()),
+    submittedAt: v.number(),
+    respondedAt: v.optional(v.number()),
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_staff', ['staffId'])
+    .index('by_school_status', ['schoolId', 'status']),
 
   // ── CONVEX AUTH TABLES ──
   // Required by @convex-dev/auth

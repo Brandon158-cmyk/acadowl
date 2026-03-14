@@ -61,7 +61,7 @@ export default function AcademicYearSettingsPage() {
         description="Manage the school's academic calendar. The active year and term drive all date-sensitive operations."
       >
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger render={<Button size="sm" />}>
+          <DialogTrigger render={<Button />}>
             <Plus className="mr-2 h-4 w-4" />
             Create Academic Year
           </DialogTrigger>
@@ -71,11 +71,13 @@ export default function AcademicYearSettingsPage() {
 
       {/* Warning banner when no academic year is active */}
       {hasNoActiveYear && (
-        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+        <div className="flex items-center gap-3 rounded-lg border border-[#D97706]/20 bg-[#FFFBEB] px-4 py-3 text-sm text-gray-800 dark:border-[#D97706]/30 dark:bg-[#D97706]/10 dark:text-gray-200">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-[#D97706]" />
           <div>
-            <p className="font-medium">No active academic year</p>
-            <p className="text-amber-800 dark:text-amber-300">
+            <p className="font-medium text-[#D97706] dark:text-[#D97706]">
+              No active academic year
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
               Attendance, exams, and fee invoicing require an active academic year. Activate one
               below.
             </p>
@@ -221,7 +223,10 @@ function CreateAcademicYearDialog({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit" disabled={loading}>
+          <Button type="button" variant="outline" size="modal" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="submit" size="modal" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Year
           </Button>
@@ -313,7 +318,10 @@ function AcademicYearCard({
           </div>
           <div className="flex items-center gap-2">
             {year.isActive ? (
-              <Badge variant="default" className="bg-emerald-600 text-white">
+              <Badge
+                variant="default"
+                className="border-transparent bg-[#2D8C3E] text-white hover:bg-[#236B30]"
+              >
                 <CheckCircle2 className="mr-1 h-3 w-3" />
                 Active
               </Badge>
@@ -322,7 +330,6 @@ function AcademicYearCard({
             )}
             {!year.isActive && (
               <Button
-                size="sm"
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -340,13 +347,13 @@ function AcademicYearCard({
             )}
             {year.isActive && (
               <Button
-                size="sm"
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClose();
                 }}
                 disabled={actionLoading === 'close'}
+                className="border-[#DC2626]/20 text-[#DC2626] hover:bg-[#DC2626]/10 hover:text-[#DC2626]"
               >
                 {actionLoading === 'close' ? (
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -417,7 +424,7 @@ function TermsSection({
       <div className="space-y-3">
         <p className="text-muted-foreground text-sm">No {termLabel.toLowerCase()}s created yet.</p>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger render={<Button size="sm" variant="outline" />}>
+          <DialogTrigger render={<Button variant="outline" />}>
             <Plus className="mr-2 h-3 w-3" />
             Create {termLabel}s
           </DialogTrigger>
@@ -458,7 +465,10 @@ function TermsSection({
             </div>
             <div className="flex items-center gap-2">
               {term.isActive ? (
-                <Badge variant="default" className="bg-emerald-600 text-white">
+                <Badge
+                  variant="default"
+                  className="border-transparent bg-[#2D8C3E] text-white hover:bg-[#236B30]"
+                >
                   Active
                 </Badge>
               ) : (
@@ -467,7 +477,7 @@ function TermsSection({
                     {new Date(term.startDate) > new Date() ? 'Upcoming' : 'Closed'}
                   </Badge>
                   {yearIsActive && (
-                    <Button size="sm" variant="ghost" onClick={() => handleActivateTerm(term._id)}>
+                    <Button variant="ghost" onClick={() => handleActivateTerm(term._id)}>
                       Activate
                     </Button>
                   )}
@@ -597,7 +607,10 @@ function CreateTermsDialog({
           ))}
         </div>
         <DialogFooter>
-          <Button type="submit" disabled={loading}>
+          <Button type="button" variant="outline" size="modal" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="submit" size="modal" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create {termLabel}s
           </Button>
