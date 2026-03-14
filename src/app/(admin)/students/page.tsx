@@ -288,8 +288,7 @@ export default function StudentsPage() {
           <Select
             value={statusFilter}
             onValueChange={(val) => {
-              setStatusFilter(val === 'all' ? '' : val);
-              setPage(0);
+              if (val) { setStatusFilter(val === 'all' ? '' : val); setPage(0); }
             }}
           >
             <SelectTrigger className="h-10 w-[140px] rounded-lg border-gray-200 text-sm">
@@ -335,7 +334,7 @@ export default function StudentsPage() {
         <Card className="flex flex-wrap items-end gap-4 border-none p-4 shadow-sm ring-1 ring-gray-100">
           <div className="flex flex-col gap-1.5">
             <Label className="text-[13px] font-medium text-[#374151]">Grade</Label>
-            <Select value={gradeFilter} onValueChange={(val) => { setGradeFilter(val === 'all' ? '' : val); setPage(0); }}>
+            <Select value={gradeFilter} onValueChange={(val) => { if (val) { setGradeFilter(val === 'all' ? '' : val); setPage(0); } }}>
               <SelectTrigger className="h-10 w-[180px] rounded-lg border-gray-200 text-sm">
                 <SelectValue placeholder="All Grades" />
               </SelectTrigger>
@@ -352,7 +351,7 @@ export default function StudentsPage() {
 
           <div className="flex flex-col gap-1.5">
             <Label className="text-[13px] font-medium text-[#374151]">Gender</Label>
-            <Select value={genderFilter} onValueChange={(val) => { setGenderFilter(val === 'all' ? '' : val); setPage(0); }}>
+            <Select value={genderFilter} onValueChange={(val) => { if (val) { setGenderFilter(val === 'all' ? '' : val); setPage(0); } }}>
               <SelectTrigger className="h-10 w-[140px] rounded-lg border-gray-200 text-sm">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
@@ -366,7 +365,7 @@ export default function StudentsPage() {
 
           <div className="flex flex-col gap-1.5">
             <Label className="text-[13px] font-medium text-[#374151]">Boarding</Label>
-            <Select value={boardingFilter} onValueChange={(val) => { setBoardingFilter(val === 'all' ? '' : val); setPage(0); }}>
+            <Select value={boardingFilter} onValueChange={(val) => { if (val) { setBoardingFilter(val === 'all' ? '' : val); setPage(0); } }}>
               <SelectTrigger className="h-10 w-[140px] rounded-lg border-gray-200 text-sm">
                 <SelectValue placeholder="All" />
               </SelectTrigger>

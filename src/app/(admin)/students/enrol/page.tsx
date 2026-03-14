@@ -606,7 +606,7 @@ export default function EnrolStudentPage() {
             <FormField label="Gender" required error={errors.gender}>
               <Select
                 value={personal.gender}
-                onValueChange={(val) => setPersonal({ ...personal, gender: val })}
+                onValueChange={(val) => val && setPersonal({ ...personal, gender: val })}
               >
                 <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
                   <SelectValue placeholder="Select gender" />
@@ -659,7 +659,7 @@ export default function EnrolStudentPage() {
             <FormField label="Blood Group">
               <Select
                 value={personal.bloodGroup}
-                onValueChange={(val) => setPersonal({ ...personal, bloodGroup: val })}
+                onValueChange={(val) => val && setPersonal({ ...personal, bloodGroup: val })}
               >
                 <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
                   <SelectValue placeholder="Select" />
@@ -700,7 +700,7 @@ export default function EnrolStudentPage() {
               <Select
                 value={academic.gradeId}
                 onValueChange={(val) => {
-                  setAcademic({ ...academic, gradeId: val, sectionId: '' });
+                  if (val) setAcademic({ ...academic, gradeId: val, sectionId: '' });
                 }}
               >
                 <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
@@ -719,7 +719,7 @@ export default function EnrolStudentPage() {
             <FormField label="Section" required error={errors.sectionId}>
               <Select
                 value={academic.sectionId}
-                onValueChange={(val) => setAcademic({ ...academic, sectionId: val })}
+                onValueChange={(val) => val && setAcademic({ ...academic, sectionId: val })}
                 disabled={!academic.gradeId}
               >
                 <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
@@ -768,7 +768,7 @@ export default function EnrolStudentPage() {
             <FormField label="Boarding Status" required>
               <Select
                 value={academic.boardingStatus}
-                onValueChange={(val) => setAcademic({ ...academic, boardingStatus: val })}
+                onValueChange={(val) => val && setAcademic({ ...academic, boardingStatus: val })}
               >
                 <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
                   <SelectValue />
@@ -784,7 +784,7 @@ export default function EnrolStudentPage() {
               <FormField label="Meal Plan">
                 <Select
                   value={academic.mealPlanType}
-                  onValueChange={(val) => setAcademic({ ...academic, mealPlanType: val })}
+                  onValueChange={(val) => val && setAcademic({ ...academic, mealPlanType: val })}
                 >
                   <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
                     <SelectValue />
@@ -926,7 +926,7 @@ export default function EnrolStudentPage() {
                 <Select
                   value={primaryGuardian.relation}
                   onValueChange={(val) =>
-                    setPrimaryGuardian({ ...primaryGuardian, relation: val })
+                    val && setPrimaryGuardian({ ...primaryGuardian, relation: val })
                   }
                 >
                   <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
@@ -1024,7 +1024,7 @@ export default function EnrolStudentPage() {
                   <Select
                     value={secondGuardian.relation}
                     onValueChange={(val) =>
-                      setSecondGuardian({ ...secondGuardian, relation: val })
+                      val && setSecondGuardian({ ...secondGuardian, relation: val })
                     }
                   >
                     <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">

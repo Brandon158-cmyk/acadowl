@@ -227,6 +227,7 @@ export const bulkPromoteStudents = mutation({
       .withIndex('by_school', (q) => q.eq('schoolId', school._id))
       .collect();
 
+    const today = new Date().toISOString().split('T')[0];
     let promoted = 0;
     let repeated = 0;
     let graduated = 0;
@@ -251,11 +252,32 @@ export const bulkPromoteStudents = mutation({
             skipped++;
             continue;
           }
+          // ISSUE-056: Close current history record
+          const promCurrent = await ctx.db
+            .query('sectionHistory')
+            .withIndex('by_student', (q) => q.eq('studentId', item.studentId))
+            .filter((q) => q.eq(q.field('toDate'), undefined))
+            .first();
+          if (promCurrent) await ctx.db.patch(promCurrent._id, { toDate: today });
+
           await ctx.db.patch(item.studentId, {
             currentSectionId: item.toSectionId,
             currentGradeId: targetSection.gradeId,
             currentAcademicYearId: args.toAcademicYearId,
             updatedAt: Date.now(),
+          });
+
+          // ISSUE-056: Create new history record for promotion
+          await ctx.db.insert('sectionHistory', {
+            schoolId: school._id,
+            studentId: item.studentId,
+            sectionId: item.toSectionId,
+            gradeId: targetSection.gradeId,
+            academicYearId: args.toAcademicYearId,
+            fromDate: today,
+            reason: 'grade_promotion',
+            changedBy: user._id,
+            createdAt: Date.now(),
           });
           promoted++;
           break;
@@ -271,19 +293,49 @@ export const bulkPromoteStudents = mutation({
             skipped++;
             continue;
           }
+
+          // ISSUE-056: Close current history record
+          const repCurrent = await ctx.db
+            .query('sectionHistory')
+            .withIndex('by_student', (q) => q.eq('studentId', item.studentId))
+            .filter((q) => q.eq(q.field('toDate'), undefined))
+            .first();
+          if (repCurrent) await ctx.db.patch(repCurrent._id, { toDate: today });
+
           await ctx.db.patch(item.studentId, {
             currentSectionId: item.toSectionId,
             currentAcademicYearId: args.toAcademicYearId,
             updatedAt: Date.now(),
+          });
+
+          // ISSUE-056: Create new history record for repeat
+          await ctx.db.insert('sectionHistory', {
+            schoolId: school._id,
+            studentId: item.studentId,
+            sectionId: item.toSectionId,
+            gradeId: student.currentGradeId,
+            academicYearId: args.toAcademicYearId,
+            fromDate: today,
+            reason: 'grade_repeat',
+            changedBy: user._id,
+            createdAt: Date.now(),
           });
           repeated++;
           break;
         }
 
         case 'graduate': {
+          // ISSUE-056: Close current history record
+          const gradCurrent = await ctx.db
+            .query('sectionHistory')
+            .withIndex('by_student', (q) => q.eq('studentId', item.studentId))
+            .filter((q) => q.eq(q.field('toDate'), undefined))
+            .first();
+          if (gradCurrent) await ctx.db.patch(gradCurrent._id, { toDate: today });
+
           await ctx.db.patch(item.studentId, {
             status: 'graduated',
-            graduationDate: new Date().toISOString().split('T')[0],
+            graduationDate: today,
             updatedAt: Date.now(),
           });
           graduated++;
@@ -291,6 +343,14 @@ export const bulkPromoteStudents = mutation({
         }
 
         case 'withdraw': {
+          // ISSUE-056: Close current history record
+          const withCurrent = await ctx.db
+            .query('sectionHistory')
+            .withIndex('by_student', (q) => q.eq('studentId', item.studentId))
+            .filter((q) => q.eq(q.field('toDate'), undefined))
+            .first();
+          if (withCurrent) await ctx.db.patch(withCurrent._id, { toDate: today });
+
           await ctx.db.patch(item.studentId, {
             status: 'withdrawn',
             updatedAt: Date.now(),

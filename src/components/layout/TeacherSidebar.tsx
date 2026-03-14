@@ -14,6 +14,7 @@ import {
   BookOpen,
   Calendar,
   MessageSquare,
+  Users,
 } from 'lucide-react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { useState } from 'react';
@@ -32,6 +33,7 @@ export function TeacherSidebar() {
 
   const teacherNavConfig = [
     { label: 'Dashboard', href: '/teacher/dashboard', icon: LayoutDashboard },
+    { label: 'My Class', href: '/teacher/my-class', icon: Users },
     { label: 'My Register', href: '/teacher/register', icon: ClipboardList },
     { label: 'My Marks', href: '/teacher/marks', icon: BookOpen },
     { label: 'Timetable', href: '/teacher/timetable', icon: Calendar },

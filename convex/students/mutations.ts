@@ -288,6 +288,19 @@ export const enrolStudent = mutation({
       createdBy: user._id,
     });
 
+    // ISSUE-056: Create initial sectionHistory record
+    await ctx.db.insert('sectionHistory', {
+      schoolId: school._id,
+      studentId,
+      sectionId: args.currentSectionId,
+      gradeId: args.currentGradeId,
+      academicYearId: school.currentAcademicYearId!,
+      fromDate: args.admissionDate,
+      reason: 'initial_enrolment',
+      changedBy: user._id,
+      createdAt: Date.now(),
+    });
+
     return { studentId, studentNumber };
   },
 });

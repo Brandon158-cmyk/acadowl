@@ -87,12 +87,14 @@ export default function StudentProfilePage() {
   const student = useQuery(api.students.queries.getStudentById, { studentId });
   const documents = useQuery(api.students.documents.getDocumentsByStudent, { studentId });
   const transfers = useQuery(api.students.transfers.getTransfersByStudent, { studentId });
+  const sectionHistory = useQuery(api.students.sectionHistory.getSectionHistory, { studentId });
 
   const updateStudent = useMutation(api.students.mutations.updateStudent);
   const generateUploadUrl = useMutation(api.students.mutations.generateUploadUrl);
   const uploadDocument = useMutation(api.students.documents.uploadDocument);
   const deleteDocument = useMutation(api.students.documents.deleteDocument);
   const initiateTransferOut = useMutation(api.students.transfers.initiateTransferOut);
+  const transferBetweenSections = useMutation(api.students.sectionHistory.transferBetweenSections);
 
   // ── Edit state ──
   const [isEditing, setIsEditing] = useState(false);
@@ -109,8 +111,22 @@ export default function StudentProfilePage() {
   });
   const [isTransferring, setIsTransferring] = useState(false);
 
+  // ── Section transfer modal ──
+  const [showSectionModal, setShowSectionModal] = useState(false);
+  const [selectedSectionId, setSelectedSectionId] = useState('');
+  const [isTransferringSection, setIsTransferringSection] = useState(false);
+
   // ── Document upload ──
   const [isUploading, setIsUploading] = useState(false);
+
+  // ── Sections for same grade (for Change Section modal) ──
+  // Only query when student is loaded — args must be stable
+  const sectionsForGrade = useQuery(
+    api.academics.sections.getSectionsByGrade,
+    student && student.currentGradeId && student.currentAcademicYearId
+      ? { gradeId: student.currentGradeId, academicYearId: student.currentAcademicYearId }
+      : 'skip',
+  );
 
   if (student === undefined) {
     return (
@@ -220,6 +236,28 @@ export default function StudentProfilePage() {
       toast.error(error.data ?? 'Failed to process transfer');
     } finally {
       setIsTransferring(false);
+    }
+  };
+
+  // ── Section transfer handler ──
+  const handleSectionTransfer = async () => {
+    if (!selectedSectionId) {
+      toast.error('Please select a section.');
+      return;
+    }
+    setIsTransferringSection(true);
+    try {
+      await transferBetweenSections({
+        studentId,
+        toSectionId: selectedSectionId as Id<'sections'>,
+      });
+      toast.success('Student moved to new section.');
+      setShowSectionModal(false);
+      setSelectedSectionId('');
+    } catch (error: any) {
+      toast.error(error.data ?? 'Failed to transfer student.');
+    } finally {
+      setIsTransferringSection(false);
     }
   };
 
@@ -395,6 +433,15 @@ export default function StudentProfilePage() {
                 >
                   <ArrowRightLeft className="h-3.5 w-3.5" />
                   Transfer Out
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSectionModal(true)}
+                  className="h-9 gap-1.5 rounded-lg border-gray-200 text-sm"
+                >
+                  <ArrowRightLeft className="h-3.5 w-3.5" />
+                  Change Section
                 </Button>
               </>
             )}
@@ -875,17 +922,70 @@ export default function StudentProfilePage() {
 
         {/* ── History Tab ── */}
         <TabsContent value="history">
-          <div className="space-y-4">
-            <h3 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-[#6B7280]">
-              Transfer History
-            </h3>
+          <div className="space-y-6">
+            {/* Section Placement History */}
+            <div className="space-y-4">
+              <h3 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-[#6B7280]">
+                Section Placement History
+              </h3>
 
-            {(!transfers || transfers.length === 0) && (
-              <Card className="flex flex-col items-center gap-3 border-none p-8 text-center shadow-sm ring-1 ring-gray-100">
-                <ArrowRightLeft className="h-10 w-10 text-gray-200" />
-                <p className="text-sm font-medium text-[#6B7280]">No transfer records</p>
-              </Card>
-            )}
+              {(!sectionHistory || sectionHistory.length === 0) ? (
+                <Card className="flex flex-col items-center gap-3 border-none p-8 text-center shadow-sm ring-1 ring-gray-100">
+                  <Clock className="h-10 w-10 text-gray-200" />
+                  <p className="text-sm font-medium text-[#6B7280]">No section history records</p>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {sectionHistory.map((record: any) => {
+                    const reasonLabels: Record<string, { label: string; color: string }> = {
+                      initial_enrolment: { label: 'Initial Enrolment', color: 'bg-[#E8F5ED] text-[#2D9B4E]' },
+                      section_transfer: { label: 'Section Transfer', color: 'bg-blue-50 text-blue-700' },
+                      grade_promotion: { label: 'Promoted', color: 'bg-purple-50 text-purple-700' },
+                      grade_repeat: { label: 'Repeated', color: 'bg-amber-50 text-amber-700' },
+                      year_end: { label: 'Year End', color: 'bg-gray-100 text-gray-600' },
+                    };
+                    const r = reasonLabels[record.reason] ?? { label: record.reason, color: 'bg-gray-100 text-gray-600' };
+                    return (
+                      <Card key={record._id} className="border-none p-4 shadow-sm ring-1 ring-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
+                              <GraduationCap className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="text-[14px] font-medium text-[#111827]">
+                                {record.gradeName} — {record.sectionDisplayName}
+                              </p>
+                              <p className="text-[12px] text-[#9CA3AF]">
+                                {record.academicYearLabel} · {record.fromDate}{record.toDate ? ` → ${record.toDate}` : ' → Present'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold', r.color)}>
+                              {r.label}
+                            </span>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Transfer History */}
+            <div className="space-y-4">
+              <h3 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-[#6B7280]">
+                Transfer History
+              </h3>
+
+              {(!transfers || transfers.length === 0) && (
+                <Card className="flex flex-col items-center gap-3 border-none p-8 text-center shadow-sm ring-1 ring-gray-100">
+                  <ArrowRightLeft className="h-10 w-10 text-gray-200" />
+                  <p className="text-sm font-medium text-[#6B7280]">No transfer records</p>
+                </Card>
+              )}
 
             {transfers?.map((transfer: any) => (
               <Card
@@ -923,6 +1023,7 @@ export default function StudentProfilePage() {
                 </div>
               </Card>
             ))}
+            </div>
           </div>
         </TabsContent>
       </Tabs>
@@ -1002,6 +1103,87 @@ export default function StudentProfilePage() {
                 <ArrowRightLeft className="mr-2 h-4 w-4" />
               )}
               Confirm Transfer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Change Section Modal ── */}
+      <Dialog open={showSectionModal} onOpenChange={setShowSectionModal}>
+        <DialogContent className="max-w-md rounded-2xl p-8">
+          <DialogTitle className="font-heading text-xl font-semibold text-[#111827]">
+            Change Section
+          </DialogTitle>
+          <DialogDescription className="text-sm text-[#6B7280]">
+            Move {student.firstName} {student.lastName} to a different section within {student.grade?.name ?? 'the same grade'}.
+          </DialogDescription>
+
+          <div className="mt-4 space-y-4">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[13px] font-medium text-[#374151]">
+                Current Section
+              </Label>
+              <p className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                {student.section?.displayName ?? 'Unknown'}
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[13px] font-medium text-[#374151]">
+                New Section <span className="text-[#DC2626]">*</span>
+              </Label>
+              <Select
+                value={selectedSectionId}
+                onValueChange={(v) => v && setSelectedSectionId(v)}
+              >
+                <SelectTrigger className="h-[48px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
+                  <SelectValue placeholder="Select new section" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(sectionsForGrade ?? [])
+                    .filter((s: any) => s._id !== student.currentSectionId)
+                    .map((s: any) => (
+                      <SelectItem key={s._id} value={s._id}>
+                        {s.displayName}
+                        {s.classTeacher && (
+                          <span className="ml-1 text-xs text-gray-400">
+                            — {s.classTeacher.firstName} {s.classTeacher.lastName}
+                          </span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  {sectionsForGrade &&
+                    sectionsForGrade.filter((s: any) => s._id !== student.currentSectionId).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-400">
+                        No other sections available in this grade
+                      </div>
+                    )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-6 gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowSectionModal(false);
+                setSelectedSectionId('');
+              }}
+              className="text-[#6B7280]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSectionTransfer}
+              disabled={isTransferringSection || !selectedSectionId}
+              className="bg-[#2D9B4E] font-semibold hover:bg-[#217A3C]"
+            >
+              {isTransferringSection ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowRightLeft className="mr-2 h-4 w-4" />
+              )}
+              Move Student
             </Button>
           </DialogFooter>
         </DialogContent>

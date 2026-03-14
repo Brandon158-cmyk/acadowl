@@ -1012,6 +1012,29 @@ const schema = defineSchema({
     .index('by_student', ['studentId'])
     .index('by_school', ['schoolId']),
 
+  // ── SECTION HISTORY (Sprint 01 — ISSUE-056) ──
+  // Audit trail of every section placement change for a student
+  sectionHistory: defineTable({
+    schoolId: v.id('schools'),
+    studentId: v.id('students'),
+    sectionId: v.id('sections'),
+    gradeId: v.id('grades'),
+    academicYearId: v.id('academicYears'),
+    fromDate: v.string(),
+    toDate: v.optional(v.string()), // Null if current placement
+    reason: v.union(
+      v.literal('initial_enrolment'),
+      v.literal('section_transfer'),
+      v.literal('grade_promotion'),
+      v.literal('grade_repeat'),
+      v.literal('year_end'),
+    ),
+    changedBy: v.id('users'),
+    createdAt: v.number(),
+  })
+    .index('by_student', ['studentId'])
+    .index('by_school', ['schoolId']),
+
   // ── STAFF SUBJECT ASSIGNMENTS (Sprint 01 — ISSUE-059) ──
   staffSubjectAssignments: defineTable({
     schoolId: v.id('schools'),

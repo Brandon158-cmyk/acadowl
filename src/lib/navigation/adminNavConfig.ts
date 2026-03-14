@@ -92,6 +92,12 @@ export const adminNavConfig: NavItem[] = [
             requiredPermission: Permission.VIEW_STAFF,
           },
           {
+            label: 'Add Staff Member',
+            href: '/staff/new',
+            icon: UserCog,
+            requiredPermission: Permission.CREATE_STAFF,
+          },
+          {
             label: 'Subject Assignments',
             href: '/staff/assignments',
             icon: Link2,

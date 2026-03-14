@@ -247,8 +247,7 @@ export default function PromotionPage() {
             <Select
               value={fromYearId}
               onValueChange={(val) => {
-                setFromYearId(val);
-                setStudentActions(new Map());
+                if (val) { setFromYearId(val); setStudentActions(new Map()); }
               }}
             >
               <SelectTrigger className="h-[48px] w-[240px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
@@ -271,8 +270,7 @@ export default function PromotionPage() {
             <Select
               value={toYearId}
               onValueChange={(val) => {
-                setToYearId(val);
-                setStudentActions(new Map());
+                if (val) { setToYearId(val); setStudentActions(new Map()); }
               }}
             >
               <SelectTrigger className="h-[48px] w-[240px] rounded-lg border-[1.5px] border-[#D1D5DB] text-sm">
@@ -492,7 +490,7 @@ export default function PromotionPage() {
                                 availableSections.length > 0 ? (
                                   <Select
                                     value={action?.toSectionId ?? ''}
-                                    onValueChange={(val) => setSection(student.studentId, val)}
+                                    onValueChange={(val) => val && setSection(student.studentId, val)}
                                   >
                                     <SelectTrigger className="h-8 w-[160px] rounded-lg border-gray-200 text-[12px]">
                                       <SelectValue placeholder="Select section" />

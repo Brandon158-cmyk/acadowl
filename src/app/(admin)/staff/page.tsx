@@ -24,6 +24,7 @@ import {
   Briefcase,
   Clock,
   AlertTriangle,
+  UserPlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
@@ -87,7 +88,7 @@ export default function StaffDirectoryPage() {
       {/* Header */}
       <div className="space-y-1">
         <div className="flex flex-col flex-wrap items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
+          <div className="flex-1">
             <div className="mb-1 flex items-center gap-2 text-sm font-medium text-[#2D9B4E]">
               <span>Administration</span>
               <ChevronRight className="text-muted-foreground/50 h-3.5 w-3.5" />
@@ -100,6 +101,12 @@ export default function StaffDirectoryPage() {
               View and manage all staff members in your school.
             </p>
           </div>
+          <Link href="/staff/new">
+            <Button className="h-10 gap-2 bg-[#2D9B4E] font-semibold hover:bg-[#217A3C]">
+              <UserPlus className="h-4 w-4" />
+              Add Staff Member
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -202,8 +209,8 @@ export default function StaffDirectoryPage() {
             };
 
             return (
+              <Link key={staff._id} href={`/staff/${staff._id}`}>
               <Card
-                key={staff._id}
                 className="group relative flex flex-col gap-4 overflow-hidden border-none bg-white p-5 shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-md hover:ring-gray-200"
               >
                 {/* Header */}
@@ -269,6 +276,7 @@ export default function StaffDirectoryPage() {
                   )}
                 </div>
               </Card>
+              </Link>
             );
           })}
         </div>
