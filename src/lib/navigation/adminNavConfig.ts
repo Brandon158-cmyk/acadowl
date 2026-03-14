@@ -6,6 +6,7 @@ import {
   BookOpen,
   Calendar,
   CalendarDays,
+  CalendarOff,
   DollarSign,
   Building,
   Bus,
@@ -19,6 +20,7 @@ import {
   UserCog,
   FileText,
   LayoutGrid,
+  Link2,
   type LucideIcon,
 } from 'lucide-react';
 import { Feature } from '@/lib/features/flags';
@@ -82,6 +84,32 @@ export const adminNavConfig: NavItem[] = [
         href: '/staff',
         icon: Users,
         requiredPermission: Permission.VIEW_STAFF,
+        children: [
+          {
+            label: 'All Staff',
+            href: '/staff',
+            icon: Users,
+            requiredPermission: Permission.VIEW_STAFF,
+          },
+          {
+            label: 'Subject Assignments',
+            href: '/staff/assignments',
+            icon: Link2,
+            requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+          },
+          {
+            label: 'Staff Attendance',
+            href: '/staff/attendance',
+            icon: ClipboardList,
+            requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+          },
+          {
+            label: 'Leave Management',
+            href: '/staff/leave',
+            icon: CalendarOff,
+            requiredPermission: Permission.MANAGE_SCHOOL_SETTINGS,
+          },
+        ],
       },
       {
         label: 'Attendance',

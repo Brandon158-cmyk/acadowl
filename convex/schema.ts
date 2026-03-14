@@ -1012,6 +1012,75 @@ const schema = defineSchema({
     .index('by_student', ['studentId'])
     .index('by_school', ['schoolId']),
 
+  // ── STAFF SUBJECT ASSIGNMENTS (Sprint 01 — ISSUE-059) ──
+  staffSubjectAssignments: defineTable({
+    schoolId: v.id('schools'),
+    staffId: v.id('staff'),
+    subjectId: v.id('subjects'),
+    sectionId: v.id('sections'),
+    academicYearId: v.id('academicYears'),
+    termId: v.optional(v.id('terms')), // Null = all terms; set if one-term assignment
+    isPrimaryTeacher: v.boolean(), // Can there be a second/substitute teacher?
+    createdAt: v.number(),
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_staff', ['staffId'])
+    .index('by_section', ['sectionId'])
+    .index('by_subject_section', ['subjectId', 'sectionId']),
+
+  // ── STAFF ATTENDANCE (Sprint 01 — ISSUE-060) ──
+  staffAttendance: defineTable({
+    schoolId: v.id('schools'),
+    staffId: v.id('staff'),
+    date: v.string(),
+    status: v.union(
+      v.literal('present'),
+      v.literal('absent'),
+      v.literal('on_leave'),
+      v.literal('late'),
+    ),
+    leaveType: v.optional(
+      v.union(
+        v.literal('annual'),
+        v.literal('sick'),
+        v.literal('maternity_paternity'),
+        v.literal('compassionate'),
+        v.literal('unpaid'),
+      ),
+    ),
+    notes: v.optional(v.string()),
+    markedBy: v.id('users'),
+    createdAt: v.number(),
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_staff_date', ['staffId', 'date'])
+    .index('by_school_date', ['schoolId', 'date']),
+
+  // ── LEAVE REQUESTS (Sprint 01 — ISSUE-061) ──
+  leaveRequests: defineTable({
+    schoolId: v.id('schools'),
+    staffId: v.id('staff'),
+    leaveType: v.union(
+      v.literal('annual'),
+      v.literal('sick'),
+      v.literal('maternity_paternity'),
+      v.literal('compassionate'),
+      v.literal('unpaid'),
+    ),
+    startDate: v.string(),
+    endDate: v.string(),
+    daysRequested: v.number(),
+    reason: v.string(),
+    status: v.union(v.literal('pending'), v.literal('approved'), v.literal('rejected')),
+    approvedBy: v.optional(v.id('users')),
+    responseNote: v.optional(v.string()),
+    submittedAt: v.number(),
+    respondedAt: v.optional(v.number()),
+  })
+    .index('by_school', ['schoolId'])
+    .index('by_staff', ['staffId'])
+    .index('by_school_status', ['schoolId', 'status']),
+
   // ── CONVEX AUTH TABLES ──
   // Required by @convex-dev/auth
   authAccounts: defineTable({
